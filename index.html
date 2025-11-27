@@ -1,0 +1,916 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>Deep Forcing: Training-Free Long Video Generation with Deep Sink and Participative Compression</title>
+
+    <!-- Favicon references 
+    <link rel="icon" type="image/png" href="./images/viral_robot.png">
+    <link rel="apple-touch-icon" href="./images/viral_robot.png">
+    <link rel="icon" type="image/x-icon" href="favicon.ico"> -->
+
+    <meta
+        content="Deep Forcing: Training-Free Long Video Generation with Deep Sink and Participative Compression"
+        name="description" />
+    <meta
+        content="Deep Forcing: Training-Free Long Video Generation with Deep Sink and Participative Compression"
+        property="og:title" />
+    <meta
+        content="Deep Forcing: Training-Free Long Video Generation with Deep Sink and Participative Compression"
+        property="og:description" />
+    <meta
+        content="Deep Forcing: Training-Free Long Video Generation with Deep Sink and Participative Compression"
+        property="twitter:title" />
+    <meta
+        content="Deep Forcing: Training-Free Long Video Generation with Deep Sink and Participative Compression"
+        property="twitter:description" />
+    <meta property="og:type" content="website" />
+    <meta content="summary_large_image" name="twitter:card" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css"
+        crossorigin="anonymous">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&family=Varela+Round&display=swap"
+        rel="stylesheet">
+    <link href="style.css?" rel="stylesheet" type="text/css" />
+
+    <!-- 🔎 Added minimal CSS for click‑to‑zoom lightbox -->
+    <style>
+      /* make images clearly zoomable */
+      img.zoomable { cursor: zoom-in; transition: transform .2s ease; }
+
+      /* fullscreen overlay */
+      .lightbox-overlay {
+        position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
+        background: rgba(0,0,0,.9); z-index: 10000;
+      }
+      .lightbox-overlay.active { display: flex; }
+      .lightbox-overlay img { max-width: 95vw; max-height: 95vh; box-shadow: 0 10px 40px rgba(0,0,0,.6); border-radius: 8px; }
+      /* show zoom-out cursor while overlay is open */
+      .lightbox-overlay, .lightbox-overlay * { cursor: zoom-out; }
+
+      /* prevent background scroll when overlay is open */
+      body.no-scroll { overflow: hidden; }
+    </style>
+
+    <!-- MathJax for LaTeX rendering -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$','$$'], ['\\[','\\]']]
+            },
+            options: {
+                skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+            },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="container">
+            <nav class="main-nav">
+                <ul class="nav-links">
+                    <li><a href="#Teaser">Teaser</a></li>
+                    <li><a href="#Motivation">Motivation</a></li>
+                    <li><a href="#Methods">Methods</a></li>
+                    <li><a href="#visual-representation-alignment">Qualitative Results</a></li>
+                    <li><a href="#comparison">Comparison</a></li>
+                    <li><a href="#ablation-studies">Ablation</a></li>
+                    <li><a href="#citation">Citation</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div class="hero-section">
+        <div class="container">
+            <div class="title-row">
+                <div class="title-flex">
+                    <!--<video class="title-video" autoplay muted loop playsinline>
+                        <source src="images/robot_alpha.webm" type="video/webm">
+                        <source src="images/moving viral.mp4" type="video/mp4"> -->
+                    </video>
+                    <div class="title-text-block">
+                        <h1 class="title"><span class="gradient-text">Deep Forcing</span>: Training-Free Long Video Generation<span class="title-break"></span> with Deep Sink and Participative Compression</h1>
+                        <h1 class="subtitle">arXiv 2025</h1>
+                    </div>
+                </div>
+            </div>
+            <div class="base-row author-row">
+                <div class="base-col author-col">
+                    <a href="https://yj-142150.github.io/jungyi/" target="_blank" class="author-text">
+                        Jung Yi<sup></sup>
+                    </a>
+                </div>
+                <div class="base-col author-col">
+                    <a href="https://scholar.google.com/citations?user=7cyLEQ0AAAAJ&hl=en/" target="_blank" class="author-text">
+                        Wooseok Jang<sup></sup>
+                    </a>
+                </div>
+                <div class="base-col author-col">
+                    <a href="https://openreview.net/profile?id=~Paul_Hyunbin_Cho1" target="_blank" class="author-text">
+                        Paul Hyunbin Cho<sup></sup>
+                    </a>
+                </div>
+            </div>
+            <div class="base-row author-row">
+                <div class="base-col author-col">
+                    <a href="https://nam-jisu.github.io/" target="_blank" class="author-text">
+                        Jisu Nam<sup></sup>
+                    </a>
+                </div>
+                <div class="base-col author-col">
+                    <a href="https://yoon-heez.github.io/" target="_blank" class="author-text">
+                        Heeji Yoon<sup></sup>
+                    </a>
+                </div>
+                <div class="base-col author-col">
+                    <a href="https://cvlab.kaist.ac.kr/" target="_blank" class="author-text">
+                        Seungryong Kim<sup></sup>
+                    </a>
+                </div>
+            </div>
+
+            <div class="base-row author-row">
+                <div class="base-col author-col affiliations">
+                    KAIST AI &nbsp;&nbsp;
+                    <br>
+                </div>
+            </div>
+            <div class="link-labels base-row">
+                <div class="base-col icon-col"><a href="" target="_blank"
+                        class="link-block">
+                        <i class="fa fas fa-file-text main-icon" style="font-size: 60px"></i>
+                        <strong class="link-labels-text">Paper</strong>
+                    </a></div>
+                <div class="base-col icon-col"><a href='https://github.com/cvlab-kaist/DeepForcing.git' class="link-block">
+                        <i class="fa fa-github main-icon" style="font-size: 60px"></i>
+                        <strong class="link-labels-text">Code</strong>
+                    </a></div>
+                <div class="base-col icon-col"><a href="#citation" class="link-block">
+                        <i class="fa fa-graduation-cap main-icon" style="font-size: 60px"></i>
+                        <strong class="link-labels-text">Citation</strong>
+                    </a></div>
+            </div>
+
+        </div>
+    </div>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="tldr">
+                <b>TL;DR</b>: Deep Forcing amplifies Self-Forcing’s emergent deep sink and performs training-free KV cache compression, stabilizing long-horizon video diffusion while preserving dynamic, high-fidelity visuals far beyond the base model’s context.
+            </div>
+
+            <div id="Teaser" class="base-row section">
+                <h2>Teaser</h2>
+                <p class="paragraph">
+                    <strong>Deep Forcing</strong> is a training-free framework that enables stable long-video generation in autoregressive video diffusion models. By combining <strong>Deep Sink</strong>—which maintains global temporal coherence through persistent, phase-aligned sink tokens—with <strong>Participative Compression</strong>—which selectively retains only contextually relevant tokens while pruning redundant history—Deep Forcing achieves <strong>more than 12× length extrapolation</strong> (5s → 60s+) without fine-tuning. This approach delivers superior imaging and aesthetic quality compared to training-based methods while preserving temporal consistency and real-time streaming capability.                </p>
+            </div>
+
+            <div class="mini-tldr">
+                    <strong>Generated with a single prompt, no speed-up, no recaching.</strong>
+            </div>
+
+            <div class="image-container">
+                <div class="video-grid">
+
+                    <div class="video-item">
+                    <div class="video-title">Rolling Forcing</div>
+                    <video
+                        class="video-player"
+                        src="videos/roll_city.mp4"
+                        autoplay
+                        loop
+                        muted
+                        playsinline
+                    ></video>
+                    </div>
+
+                    <div class="video-item">
+                    <div class="video-title">Ours(Training-Free)</div>
+                    <video
+                        class="video-player"
+                        src="videos/ours_city.mp4"
+                        autoplay
+                        loop
+                        muted
+                        playsinline
+                    ></video>
+                    </div>
+
+                    <div class="video-item">
+                    <div class="video-title">LongLive</div>
+                    <video
+                        class="video-player"
+                        src="videos/long_dog.mp4"
+                        autoplay
+                        loop
+                        muted
+                        playsinline
+                    ></video>
+                    </div>
+
+                    <div class="video-item">
+                    <div class="video-title">Ours(Training-Free)</div>
+                    <video
+                        class="video-player"
+                        src="videos/ours_dog.mp4"
+                        autoplay
+                        loop
+                        muted
+                        playsinline
+                    ></video>
+                    </div>
+
+                </div>
+
+                <!-- 필요하면 아래 캡션을 살려 써도 됨 -->
+            </div>
+            <!-- <div>
+                <p>
+                    <img class="paragraph-image" src="images/virabot_head.png" alt="VIRAL robot" />
+                    VIRAL introduces an auxiliary regularization objective on the visual pathway to prevent MLLMs from discarding detailed attributes during training. 
+                </p>
+                <p>
+                    <img class="paragraph-image" src="images/virabot_head.png" alt="VIRAL robot" />
+                    VIRAL, when trained with DINOv2 as the vision foundation model (VFM), consistently produces more accurate visually grounded responses and achieves substantial improvements over standard baselines across diverse vision encoders, including CLIP and SigLIPv2!
+                </p>
+            </div> -->
+
+            
+
+            <section id="Motivation" class="section">
+                <h2>Motivation</h2>
+                <div class="image-container motivation-figure">
+                    <div class="image-content">
+                        <img src="images/motivation_attn.png" class="img large-image" alt="Comparisons diagram">
+                    </div>
+                </div>
+                <div class="motivation-caption">
+                    <p> (a) baseline visual instruction tuning, (b) re-injecting visual features from the <i>post</i>-projection layer, (c) re-injecting from the <i>pre</i>-projection layer, and (d) the proposed visual representation alignment. </p>
+                    <p>(e) Layer-wise alignment between visual tokens in MLLMs and vision encoder features measured by CKNNA, with shaded regions highlighting middle layers that are especially important for visual understanding. (f) Benchmark performance corresponding to (a–d) </p>
+                </div>
+<!-- 
+                <h3>Do MLLMs undergo visual information loss?</h3>
+                <p>MLLMs are trained with text-only supervision, causing their visual features to drift from the encoder’s rich representations.
+                    We measure this with CKNNA and observe a sharp drop in similarity to CLIP features across layers.</p>
+                <h3>Is preserving visual information beneficial?</h3>
+                <p>Motivated by the observation that internal visual representations of MLLMs diverge from the encoder’s original features, we ask whether re-injecting them could help. We add a residual connection that feeds the input visual features of the language model back into its mid-layers. This preserves alignment with the encoder and yields consistent performance gains on multimodal benchmarks.</p>
+                <h3>Can we compensate visual information with raw vision encoder feature?</h3>
+                <p>We first tested re-injecting raw vision encoder features into mid-layers via a residual branch, but this degraded performance as the features were not language-aligned and disrupted intermediate representations. 
+                To address this, we introduce a more principled strategy by explicitly aligning intermediate visual representations with frozen encoder features through a Visual Representation Alignment (VRA) loss. <p>This approach yields general improvements, though limitations remain: <strong> <i>encoder features can also transmit their inherent biases</i></strong>, as observed in MMVP.</p> -->
+            </section>
+
+            <section id="Methods" class="section">
+                <h2>Deep Forcing</h2>
+                <div class="image-container methods-figure">
+                    <div class="image-content">
+                        <img src="images/main_figure.png" class="image-item img large-image z-depth-1" alt="VIRAL framework illustration">
+                    </div>
+                    <!-- <p class="image-caption">Building upon our findings in visual representation alignment, we align visual pathway representation from MLLMs to strong, informative representations from VFMs to improve the vision understanding performance of MLLMs. </p> -->
+                </div>
+                <div class="methods-text">
+                    <p>
+                    <h3>What should serve as the alignment target?</h3>
+                    </p>
+                    <p>
+                    While aligning multimodal models with their own encoder features preserves some visual cues, it is fundamentally constrained by the encoder’s representational capacity. To overcome this limitation, we leverage stronger vision foundation models (VFMs) as teachers, providing richer, vision-centric targets.
+                    </p>
+                    <p>
+                    Building on this insight, we introduce <strong><i>VIRAL</i></strong>, which aligns intermediate MLLM representations to features from pretrained VFMs, thereby preserving more informative visual semantics than those available from the input encoder alone.
+                    </p>
+                </div>
+            </section>
+
+            <section id="visual-representation-alignment" class="section">
+                <h2>Qualitative Results</h2>
+                <p>
+                    We first showcase long-horizon rollouts from Deep Forcing alone, and then
+                    compare it against Self-Forcing and other baselines on shared prompts.
+                    Model indicators are shown in the first row of each grid.
+                </p>
+
+                <!-- 1) Ours only: 3 x 4 grid (12 clips) -->
+                <h3>Deep Forcing on diverse prompts</h3>
+                <div class="video-grid-3x4">
+                    <!-- Row 1 (모델 인디케이터 포함) -->
+                    <div class="video-item">
+                        <div class="video-label">Cat walking</div>
+                        <video class="video-player" src="videos/ours_cat.mp4"
+                            autoplay loop muted playsinline></video>
+                    </div>
+                    <div class="video-item">
+                        <div class="video-label">Underwater</div>
+                        <video class="video-player" src="videos/ours_underwater_real.mp4"
+                            autoplay loop muted playsinline></video>
+                    </div>
+                    <div class="video-item">
+                        <div class="video-label">Pirat</div>
+                        <video class="video-player" src="videos/ours_pirat.mp4"
+                            autoplay loop muted playsinline></video>
+                    </div>
+
+                    <!-- Row 2 -->
+                    <div class="video-item">
+                        <div class="video-label">Dwarf</div>
+                        <video class="video-player" src="videos/ours_dwarf.mp4"
+                            autoplay loop muted playsinline></video>
+                    </div>
+                    <div class="video-item">
+                        <div class="video-label">Parrot</div>
+                        <video class="video-player" src="videos/ours_parrot_real.mp4"
+                            autoplay loop muted playsinline></video>
+                    </div>
+                    <div class="video-item">
+                        <div class="video-label">Kitchen</div>
+                        <video class="video-player" src="videos/ours_kitchen.mp4"
+                            autoplay loop muted playsinline></video>
+                    </div>
+
+                    <!-- Row 3 -->
+                    <div class="video-item">
+                        <div class="video-label">Animal Chase</div>
+                        <video class="video-player" src="videos/df_animal_1.mp4"
+                            autoplay loop muted playsinline></video>
+                    </div>
+                    <div class="video-item">
+                        <div class="video-label">Indoor Scene</div>
+                        <video class="video-player" src="videos/df_indoor_1.mp4"
+                            autoplay loop muted playsinline></video>
+                    </div>
+                    <div class="video-item">
+                        <div class="video-label">Aerial View</div>
+                        <video class="video-player" src="videos/df_aerial_1.mp4"
+                            autoplay loop muted playsinline></video>
+                    </div>
+
+                    <!-- Row 4 -->
+                    <div class="video-item">
+                        <div class="video-label">Crowd Scene</div>
+                        <video class="video-player" src="videos/df_crowd_1.mp4"
+                            autoplay loop muted playsinline></video>
+                    </div>
+                    <div class="video-item">
+                        <div class="video-label">Long-Haul Camera</div>
+                        <video class="video-player" src="videos/df_longhaul_1.mp4"
+                            autoplay loop muted playsinline></video>
+                    </div>
+                    <div class="video-item">
+                        <div class="video-label">[Another Prompt]</div>
+                        <video class="video-player" src="videos/df_extra_1.mp4"
+                            autoplay loop muted playsinline></video>
+                    </div>
+                </div>
+
+                <!-- 2) Ours vs baselines: 4 x 4 grid (기존 그대로) -->
+                <h3 id="comparison">Comparison with baselines on shared prompts</h3>
+                <p class="paragraph">
+                    We zoom in on matched prompts to make side-by-side comparisons easier. Each 2×2 view groups the same scenario across competing methods so you can quickly gauge temporal fidelity, motion quality, and recovery behavior as you flip through the carousel.
+                </p>
+
+                <div class="comparison-slider">
+                    <button class="comparison-nav prev" aria-label="Previous comparison set">
+                        <i class="fa fa-chevron-left"></i>
+                    </button>
+                    <div class="comparison-track">
+                        <div class="comparison-slide active">
+                            <div class="video-item">
+                                <div class="video-label">Deep Forcing (Ours)</div>
+                                <video class="video-player" src="videos/sf_city.mp4"
+                                    autoplay loop muted playsinline></video>
+                            </div>
+                            <div class="video-item">
+                                <div class="video-label">Self Forcing</div>
+                                <video class="video-player" src="videos/df_city_cmp.mp4"
+                                    autoplay loop muted playsinline></video>
+                            </div>
+                            <div class="video-item">
+                                <div class="video-label">Rolling Forcing</div>
+                                <video class="video-player" src="videos/ir_city.mp4"
+                                    autoplay loop muted playsinline></video>
+                            </div>
+                            <div class="video-item">
+                                <div class="video-label">LongLive</div>
+                                <video class="video-player" src="videos/cv_city.mp4"
+                                    autoplay loop muted playsinline></video>
+                            </div>
+                        </div>
+                        <div class="comparison-slide">
+                            <div class="video-item">
+                                <div class="video-label">Deep Forcing (Ours)</div>
+                                <video class="video-player" src="videos/df_forest_1.mp4"
+                                    autoplay loop muted playsinline></video>
+                            </div>
+                            <div class="video-item">
+                                <div class="video-label">Self Forcing</div>
+                                <video class="video-player" src="videos/df_multi_1.mp4"
+                                    autoplay loop muted playsinline></video>
+                            </div>
+                            <div class="video-item">
+                                <div class="video-label">Rolling Forcing</div>
+                                <video class="video-player" src="videos/df_multi_2.mp4"
+                                    autoplay loop muted playsinline></video>
+                            </div>
+                            <div class="video-item">
+                                <div class="video-label">LongLive</div>
+                                <video class="video-player" src="videos/df_multi_2.mp4"
+                                    autoplay loop muted playsinline></video>
+                            </div>
+                        </div>
+                        <div class="comparison-slide">
+                            <div class="video-item">
+                                <div class="video-label">Deep Forcing (Ours)</div>
+                                <video class="video-player" src="videos/df_animal_1.mp4"
+                                    autoplay loop muted playsinline></video>
+                            </div>
+                            <div class="video-item">
+                                <div class="video-label">Self Forcing</div>
+                                <video class="video-player" src="videos/df_indoor_1.mp4"
+                                    autoplay loop muted playsinline></video>
+                            </div>
+                            <div class="video-item">
+                                <div class="video-label">Rolling Forcing</div>
+                                <video class="video-player" src="videos/df_aerial_1.mp4"
+                                    autoplay loop muted playsinline></video>
+                            </div>
+                            <div class="video-item">
+                                <div class="video-label">LongLive</div>
+                                <video class="video-player" src="videos/df_aerial_1.mp4"
+                                    autoplay loop muted playsinline></video>
+                            </div>
+                        </div>
+                        <div class="comparison-slide">
+                            <div class="video-item">
+                                <div class="video-label">Deep Forcing (Ours)</div>
+                                <video class="video-player" src="videos/df_crowd_1.mp4"
+                                    autoplay loop muted playsinline></video>
+                            </div>
+                            <div class="video-item">
+                                <div class="video-label">Self Forcing</div>
+                                <video class="video-player" src="videos/df_longhaul_1.mp4"
+                                    autoplay loop muted playsinline></video>
+                            </div>
+                            <div class="video-item">
+                                <div class="video-label">Rolling Forcing</div>
+                                <video class="video-player" src="videos/df_extra_1.mp4"
+                                    autoplay loop muted playsinline></video>
+                            </div>
+                            <div class="video-item">
+                                <div class="video-label">LongLive</div>
+                                <video class="video-player" src="videos/df_extra_1.mp4"
+                                    autoplay loop muted playsinline></video>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="comparison-nav next" aria-label="Next comparison set">
+                        <i class="fa fa-chevron-right"></i>
+                    </button>
+                </div>
+            </section>
+
+            <section id="ablation-studies" class="section">
+                <h2>Ablation</h2>
+                <p class="paragraph">Sink Size Ablation: increasing sink tokens sharpens scene memory but also adds compute overhead. We sweep across six sink sizes to illustrate the fidelity versus stability trade-offs.</p>
+                <div class="video-grid-3x2">
+                    <div class="video-item">
+                        <div class="video-label">Sink Size 0</div>
+                        <video class="video-player" src="videos/sink_04.mp4" autoplay loop muted playsinline></video>
+                    </div>
+                    <div class="video-item">
+                        <div class="video-label">Sink Size 4</div>
+                        <video class="video-player" src="videos/sink_08.mp4" autoplay loop muted playsinline></video>
+                    </div>
+                    <div class="video-item">
+                        <div class="video-label">Sink Size 9</div>
+                        <video class="video-player" src="videos/sink_12.mp4" autoplay loop muted playsinline></video>
+                    </div>
+                    <div class="video-item">
+                        <div class="video-label">Sink Size 12</div>
+                        <video class="video-player" src="videos/sink_16.mp4" autoplay loop muted playsinline></video>
+                    </div>
+                    <div class="video-item">
+                        <div class="video-label">Sink Size 14</div>
+                        <video class="video-player" src="videos/sink_20.mp4" autoplay loop muted playsinline></video>
+                    </div>
+                    <div class="video-item">
+                        <div class="video-label">Sink Size 18</div>
+                        <video class="video-player" src="videos/sink_24.mp4" autoplay loop muted playsinline></video>
+                    </div>
+                </div>
+
+                <p class="paragraph add-top-padding">Component Analysis: Deep Sink (DS) and Participative Compression (PC) can be layered on top of the vanilla baseline. The clips below highlight how each component progressively improves long-horizon coherence.</p>
+                <div class="video-grid-3x1">
+                    <div class="video-item">
+                        <div class="video-label">Baseline</div>
+                        <video class="video-player" src="videos/baseline_plain.mp4" autoplay loop muted playsinline></video>
+                    </div>
+                    <div class="video-item">
+                        <div class="video-label">Baseline + Deep Sink</div>
+                        <video class="video-player" src="videos/baseline_ds.mp4" autoplay loop muted playsinline></video>
+                    </div>
+                    <div class="video-item">
+                        <div class="video-label">Baseline + DS + PC</div>
+                        <video class="video-player" src="videos/baseline_ds_pc.mp4" autoplay loop muted playsinline></video>
+                    </div>
+                </div>
+            </section>
+                
+                
+
+            <section id="conclusion" class="section">
+                <h2>Conclusion</h2>
+
+                <p>In this work, we propose VIRAL, a simple yet effective training strategy that aligns the internal visual representations of MLLMs with those from powerful vision foundation models. Our approach preserves fine-grained visual semantics often discarded under text-only supervision, enabling more accurate spatial reasoning and object grounding. Extensive experiments across diverse benchmarks validate the effectiveness and generality of our method, demonstrating that visual representation alignment significantly enhances both performance and training efficiency in multimodal learning.</p>
+            </section>
+
+            <div class="citation add-top-padding">
+                <h1 id="citation">Citation</h1>
+                <p> If you use this work or find it helpful, please consider citing: </p>
+                <pre id="codecell0">
+<!-- Misc needed -->
+                </pre>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p class="credit">Credit: The design of this project page is inspired by previous academic project pages, such as <a href="https://llm-grounded-diffusion.github.io/" target="_blank">LLM-grounded Diffusion</a> and <a href="https://describe-anything.github.io/" target="_blank">Describe-anything</a>.</p>
+        </div>
+    </footer>
+
+    <script>
+    function toggleMute(element) {
+        const video = element.parentElement.querySelector('video');
+        const icon = element.querySelector('i');
+        const text = element.querySelector('.unmute-text');
+        
+        if (video.muted) {
+            video.muted = false;
+            icon.className = 'fa fa-volume-up';
+            text.textContent = 'Mute';
+        } else {
+            video.muted = true;
+            icon.className = 'fa fa-volume-off';
+            text.textContent = 'Click to unmute';
+        }
+    }
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const formatTime = (seconds) => {
+            if (!isFinite(seconds)) return '--:--';
+            const total = Math.max(Math.floor(seconds), 0);
+            const hrs = Math.floor(total / 3600);
+            const mins = Math.floor((total % 3600) / 60);
+            const secs = total % 60;
+            const two = (value) => String(value).padStart(2, '0');
+            return hrs > 0 ? `${hrs}:${two(mins)}:${two(secs)}` : `${mins}:${two(secs)}`;
+        };
+
+        const videos = document.querySelectorAll('video');
+        videos.forEach(video => {
+            video.addEventListener('play', function() {
+                const overlay = this.parentElement.querySelector('.unmute-overlay');
+                if (overlay) overlay.style.opacity = '0.8';
+            });
+            
+            video.addEventListener('pause', function() {
+                const overlay = this.parentElement.querySelector('.unmute-overlay');
+                if (overlay) overlay.style.opacity = '0.8';
+            });
+        });
+
+        // Build modal for video zoom
+        const videoLightbox = document.createElement('div');
+        videoLightbox.className = 'video-lightbox';
+        videoLightbox.innerHTML = `
+            <div class="video-lightbox-content">
+                <button type="button" class="video-lightbox-close" aria-label="Close video">
+                    <i class="fa fa-times"></i>
+                </button>
+                <video class="video-lightbox-player" controls playsinline></video>
+            </div>
+        `;
+        document.body.appendChild(videoLightbox);
+        const videoLightboxPlayer = videoLightbox.querySelector('.video-lightbox-player');
+        const videoLightboxClose = videoLightbox.querySelector('.video-lightbox-close');
+
+        function closeVideoLightbox() {
+            videoLightbox.classList.remove('active');
+            document.body.classList.remove('no-scroll');
+            videoLightboxPlayer.pause();
+            videoLightboxPlayer.removeAttribute('src');
+            videoLightboxPlayer.load();
+        }
+
+        function openVideoLightbox(sourceVideo) {
+            const src = sourceVideo.currentSrc || sourceVideo.getAttribute('src');
+            if (!src) return;
+            videoLightboxPlayer.src = src;
+            videoLightboxPlayer.muted = sourceVideo.muted;
+            const syncTime = () => {
+                try {
+                    videoLightboxPlayer.currentTime = sourceVideo.currentTime || 0;
+                } catch (e) {}
+            };
+            if (videoLightboxPlayer.readyState >= 1) {
+                syncTime();
+            } else {
+                videoLightboxPlayer.addEventListener('loadedmetadata', syncTime, { once: true });
+            }
+            videoLightbox.classList.add('active');
+            document.body.classList.add('no-scroll');
+            videoLightboxPlayer.play();
+            sourceVideo.pause();
+        }
+
+        videoLightbox.addEventListener('click', (event) => {
+            if (event.target === videoLightbox) {
+                closeVideoLightbox();
+            }
+        });
+        videoLightboxClose.addEventListener('click', (event) => {
+            event.stopPropagation();
+            closeVideoLightbox();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && videoLightbox.classList.contains('active')) {
+                closeVideoLightbox();
+            }
+        });
+
+        // Enable tap-to-toggle controls for showcase videos
+        document.querySelectorAll('.video-player').forEach(video => {
+            const wrapper = video.closest('.video-item') || video.parentElement;
+            if (!wrapper) return;
+
+            const hint = document.createElement('div');
+            hint.className = 'video-toggle-hint';
+            wrapper.appendChild(hint);
+
+            const controls = document.createElement('div');
+            controls.className = 'video-controls';
+
+            const playButton = document.createElement('button');
+            playButton.type = 'button';
+            playButton.className = 'video-control-btn play-toggle';
+            playButton.innerHTML = '<i class="fa fa-pause"></i>';
+
+            const timeLabel = document.createElement('div');
+            timeLabel.className = 'video-time';
+            timeLabel.textContent = '0:00 / --:--';
+
+            const progress = document.createElement('div');
+            progress.className = 'video-progress';
+            const progressFill = document.createElement('div');
+            progressFill.className = 'video-progress-fill';
+            progress.appendChild(progressFill);
+
+            const expandButton = document.createElement('button');
+            expandButton.type = 'button';
+            expandButton.className = 'video-control-btn expand';
+            expandButton.innerHTML = '<i class="fa fa-expand"></i>';
+
+            controls.appendChild(playButton);
+            controls.appendChild(timeLabel);
+            controls.appendChild(progress);
+            controls.appendChild(expandButton);
+            wrapper.appendChild(controls);
+
+            let hideHintTimeout;
+            function showHint() {
+                const isPaused = video.paused;
+                hint.innerHTML = `<i class="fa ${isPaused ? 'fa-play' : 'fa-pause'}"></i>${isPaused ? 'Tap to play' : 'Tap to pause'}`;
+                hint.classList.add('show');
+                clearTimeout(hideHintTimeout);
+                hideHintTimeout = setTimeout(() => hint.classList.remove('show'), 1600);
+            }
+
+            const syncPlayIcon = () => {
+                playButton.innerHTML = `<i class="fa ${video.paused ? 'fa-play' : 'fa-pause'}"></i>`;
+            };
+
+            const updateTimeLabel = () => {
+                const current = formatTime(video.currentTime || 0);
+                const total = formatTime(video.duration);
+                timeLabel.textContent = `${current} / ${total}`;
+            };
+
+            const updateProgress = () => {
+                if (!video.duration || !isFinite(video.duration)) {
+                    progressFill.style.width = '0%';
+                    return;
+                }
+                const ratio = video.currentTime / video.duration;
+                progressFill.style.width = `${Math.min(Math.max(ratio, 0), 1) * 100}%`;
+            };
+
+            video.addEventListener('click', () => {
+                if (video.paused) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
+            });
+
+            playButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                if (video.paused) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
+            });
+
+            expandButton.addEventListener('click', (event) => {
+                event.stopPropagation();
+                openVideoLightbox(video);
+            });
+
+            video.addEventListener('play', () => {
+                showHint();
+                syncPlayIcon();
+            });
+            video.addEventListener('pause', () => {
+                showHint();
+                syncPlayIcon();
+            });
+            video.addEventListener('ended', () => {
+                syncPlayIcon();
+            });
+
+            video.addEventListener('loadedmetadata', () => {
+                updateProgress();
+                updateTimeLabel();
+            });
+            video.addEventListener('timeupdate', () => {
+                updateProgress();
+                updateTimeLabel();
+            });
+
+            progress.addEventListener('click', event => {
+                event.stopPropagation();
+                if (!video.duration || !isFinite(video.duration)) return;
+                const rect = progress.getBoundingClientRect();
+                const ratio = Math.min(Math.max((event.clientX - rect.left) / rect.width, 0), 1);
+                video.currentTime = ratio * video.duration;
+                updateProgress();
+            });
+
+            updateTimeLabel();
+            updateProgress();
+            syncPlayIcon();
+            showHint();
+        });
+
+        // Comparison slider for 2x2 batches
+        const comparisonSlider = document.querySelector('.comparison-slider');
+        if (comparisonSlider) {
+            const slides = comparisonSlider.querySelectorAll('.comparison-slide');
+            const prevButton = comparisonSlider.querySelector('.comparison-nav.prev');
+            const nextButton = comparisonSlider.querySelector('.comparison-nav.next');
+            let currentSlide = 0;
+
+            function showComparisonSlide(index) {
+                slides.forEach(slide => slide.classList.remove('active'));
+                currentSlide = (index + slides.length) % slides.length;
+                slides[currentSlide].classList.add('active');
+            }
+
+            prevButton.addEventListener('click', () => showComparisonSlide(currentSlide - 1));
+            nextButton.addEventListener('click', () => showComparisonSlide(currentSlide + 1));
+        }
+
+        // Initialize all slideshows
+        document.querySelectorAll('.slideshow-container').forEach(container => {
+            const slideshow = container.querySelector('.slideshow');
+            const slides = slideshow.querySelectorAll('.slide');
+            const prevButton = container.querySelector('.slideshow-nav.prev');
+            const nextButton = container.querySelector('.slideshow-nav.next');
+            const playPauseButton = container.querySelector('.play-pause');
+            
+            let currentSlide = 0;
+            let autoplayInterval;
+            let isPlaying = true;
+
+            function showSlide(n) {
+                slides.forEach(slide => slide.classList.remove('active'));
+                currentSlide = (n + slides.length) % slides.length;
+                slides[currentSlide].classList.add('active');
+            }
+
+            function changeSlide(n) {
+                showSlide(currentSlide + n);
+                resetAutoplay();
+            }
+
+            function togglePlayPause() {
+                if (isPlaying) {
+                    clearInterval(autoplayInterval);
+                    playPauseButton.innerHTML = '<i class="fa fa-play"></i>';
+                } else {
+                    startAutoplay();
+                    playPauseButton.innerHTML = '<i class="fa fa-pause"></i>';
+                }
+                isPlaying = !isPlaying;
+            }
+
+            function startAutoplay() {
+                autoplayInterval = setInterval(() => {
+                    showSlide(currentSlide + 1);
+                }, 5000);
+            }
+
+            function resetAutoplay() {
+                clearInterval(autoplayInterval);
+                if (isPlaying) {
+                    startAutoplay();
+                }
+            }
+
+            // Initialize this slideshow
+            showSlide(0);
+            startAutoplay();
+
+            // Add event listeners
+            prevButton.addEventListener('click', () => changeSlide(-1));
+            nextButton.addEventListener('click', () => changeSlide(1));
+            playPauseButton.addEventListener('click', togglePlayPause);
+        });
+
+        // Handle main video play button
+        const mainVideo = document.querySelector('.main-video');
+        const playButton = document.querySelector('.play-button-overlay');
+        
+        if (mainVideo && playButton) {
+            // Click play button to play video
+            playButton.addEventListener('click', () => {
+                mainVideo.play();
+                mainVideo.classList.add('playing');
+            });
+
+            // Handle video play/pause events
+            mainVideo.addEventListener('play', () => {
+                mainVideo.classList.add('playing');
+            });
+
+            mainVideo.addEventListener('pause', () => {
+                mainVideo.classList.remove('playing');
+            });
+
+            mainVideo.addEventListener('ended', () => {
+                mainVideo.classList.remove('playing');
+            });
+        }
+
+        // -----------------------------
+        // 🖼️ Click-to-zoom Lightbox
+        // -----------------------------
+        // Build overlay once
+        const lightbox = document.createElement('div');
+        lightbox.className = 'lightbox-overlay';
+        lightbox.setAttribute('role', 'dialog');
+        lightbox.setAttribute('aria-modal', 'true');
+        lightbox.innerHTML = '<img alt="Expanded image">';
+        document.body.appendChild(lightbox);
+        const lightboxImg = lightbox.querySelector('img');
+
+        function openLightbox(src, alt) {
+            lightboxImg.src = src;
+            lightboxImg.alt = alt || '';
+            lightbox.classList.add('active');
+            document.body.classList.add('no-scroll');
+        }
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+            document.body.classList.remove('no-scroll');
+            lightboxImg.src = '';
+        }
+
+        // Close on click anywhere or on Esc
+        lightbox.addEventListener('click', closeLightbox);
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && lightbox.classList.contains('active')) closeLightbox();
+        });
+
+        // Mark target images as zoomable and wire up click
+        const zoomableImages = document.querySelectorAll('.image-container img, .slideshow img, .main-content img.img, .hero-section img.img');
+        zoomableImages.forEach(img => {
+            img.classList.add('zoomable');
+            img.addEventListener('click', () => {
+                // support optional high-res source via data-fullsrc
+                const src = img.getAttribute('data-fullsrc') || img.currentSrc || img.src;
+                openLightbox(src, img.alt);
+            });
+        });
+    });
+    </script>
+</body>
+</html>
