@@ -272,9 +272,9 @@
                     <p>
                     </p>
                     <p>
-                   <strong><i>Deep Sink</i></strong> maintains a substantially enlarged attention sink (~50% of cache) to preserve important historical context, with temporal RoPE adjustment ensuring coherence between sink tokens and current frames. 
+                   <strong><i>Deep Sink</i></strong> maintains a substantially enlarged attention sink (~50% of cache), with temporal RoPE adjustment, ensuring temporal coherence between sink tokens and current frames. 
                     <p>
-                    <strong><i>Participative Compression</i></strong>, which selectively prunes redundant tokens by computing query-averaged attention scores from recent frames, retains only the top-C most contextually relevant tokens while evicting redundant and degraded tokens.
+                    <strong><i>Participative Compression</i></strong>, which selectively prunes redundant tokens by computing attention scores from recent frames, retains only the top-C most contextually relevant tokens while evicting redundant and degraded tokens.
                     </p>
                 </div>
             </section>
@@ -316,16 +316,16 @@
                             data-prompt="A dynamic scene captured in the style of a vibrant food photography, showcasing a chef skillfully chopping onions in a bustling kitchen. The chef, a middle-aged man with a weathered face and determined expression, skillfully slices the onions with quick, practiced movements. He wears a white apron tied neatly around his waist and a chef's hat perched atop his head. The background is a well-equipped kitchen, with stainless steel appliances and countertops cluttered with various cooking tools and ingredients. Steam rises from a pot on the stove, and sunlight filters through the window, casting a warm glow. A medium shot with the chef at the center, capturing the intensity of his work."></video>
                     </div>
                     <div class="video-item">
-                        <div class="video-label">Parrot</div>
-                        <video class="video-player" src="videos/ours_parrot_real.mp4"
-                            autoplay loop muted playsinline
-                            data-prompt="A close-up shot of a bright blue parrot's shimmering feathers, capturing the unique and vibrant colors in the light. The parrot's feathers glisten with a metallic sheen, showcasing a mix of deep indigos, vivid greens, and rich blues. Its eyes sparkle with curiosity, and it appears lively and alert, perched on a branch. The background is blurred, highlighting the parrot against a soft, warm environment. The photo has a naturalistic and lifelike quality, emphasizing the bird's detailed plumage and natural movements."></video>
-                    </div>
-                    <div class="video-item">
                         <div class="video-label">Romantic</div>
                         <video class="video-player" src="videos/ours_romantic.mp4"
                             autoplay loop muted playsinline
                             data-prompt="A romantic scene in a nighttime cityscape where a man and a woman walk hand in hand under a starry sky, their faces illuminated by the soft glow of streetlights. They are dressed in casual yet elegant attire, the man in a dark blue suit and the woman in a light green dress. A wooden bucket is placed on the ground nearby, adding a touch of rustic charm. The couple’s expressions are filled with happiness and affection, as they gaze into each other’s eyes. The background features tall buildings with windows lit up, creating a warm and cozy atmosphere. The stars above twinkle brightly, enhancing the serene and intimate mood. The scene is captured in a medium shot with a slightly upward angle, capturing both the couple and the surrounding environment."></video>
+                    </div>
+                    <div class="video-item">
+                        <div class="video-label">Pigeon</div>
+                        <video class="video-player" src="videos/ours_pigion.mp4"
+                            autoplay loop muted playsinline
+                            data-prompt="A close-up shot of a Victoria crowned pigeon in a naturalistic wildlife photography style, showcasing its striking blue plumage and red chest. The bird’s crest is adorned with delicate, lacy feathers, and its eye is a striking red color, adding to its regal and majestic appearance. The pigeon’s head is tilted slightly to the side, giving it a regal gaze. The background is blurred, emphasizing the bird’s striking beauty against a soft, muted backdrop. The lighting highlights the bird’s feathers, creating a vibrant and lifelike image."></video>
                     </div>
 
                     <!-- Row 3 -->
