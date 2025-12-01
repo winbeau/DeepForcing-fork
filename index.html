@@ -222,13 +222,14 @@
             </div> -->
 
             <div class="tldr">
-                <b>TL;DR</b>: Deep Forcing amplifies Self-Forcing’s emergent deep sink and performs training-free KV cache compression, stabilizing long-horizon video diffusion while preserving dynamic, high-fidelity visuals far beyond the base model’s context.
+                <b>TL;DR</b>: Deep Forcing amplifies Self-Forcing's emergent deep sink and performs training-free KV cache compression, mitigating quality degradation in long-horizon video diffusion while preserving dynamic, high-fidelity visuals far beyond the base model's context.
             </div>
 
             <div class="base-row section">
                 <p class="explain">
-                    <strong>Deep Forcing</strong> is a training-free framework that enables stable long-video generation in autoregressive video diffusion models. By combining <strong>Deep Sink</strong>—which maintains global temporal coherence through persistent, RoPE-aligned sink tokens—with <strong>Participative Compression</strong>—which selectively retains only contextually relevant tokens while pruning redundant history—Deep Forcing achieves <strong>more than 12× length extrapolation</strong> (5s → 60s+) without fine-tuning. This approach delivers superior imaging and aesthetic quality compared to training-based methods while preserving real-time streaming capability.
-                </p>
+                    <strong>Deep Forcing</strong> is a training-free framework that enables long-video generation in autoregressive video diffusion models by combining <strong>Deep Sink</strong> and <strong>Participative Compression</strong>. <br>
+                    <br>
+                    <strong>Deep Forcing</strong> achieves <strong>more than 12× length extrapolation</strong> (5s → 60s+) without fine-tuning. This approach delivers superior imaging and aesthetic quality compared to training-based methods while preserving real-time streaming capability.                </p>
             </div>
 
             <section id="Motivation" class="section">
@@ -273,7 +274,7 @@
                     <p>
                    <strong><i>Deep Sink</i></strong> maintains a substantially enlarged attention sink (~50% of cache) to preserve important historical context, with temporal RoPE adjustment ensuring coherence between sink tokens and current frames. 
                     <p>
-                    <strong><i>Participative Compression</i></strong>, which dynamically prunes redundant tokens by computing query-averaged attention scores from recent frames, retains only the top-C most contextually relevant tokens while evicting obsolete history.
+                    <strong><i>Participative Compression</i></strong>, which selectively prunes redundant tokens by computing query-averaged attention scores from recent frames, retains only the top-C most contextually relevant tokens while evicting redundant and degraded tokens.
                     </p>
                 </div>
             </section>
@@ -291,46 +292,54 @@
                     <div class="video-item">
                         <div class="video-label">Cat walking</div>
                         <video class="video-player" src="videos/ours_cat.mp4"
-                            autoplay loop muted playsinline></video>
+                            autoplay loop muted playsinline
+                            data-prompt="A cinematic and grainy photograph captures a white and orange tabby cat joyfully darting through a dense garden, as if chasing something. The cat’s eyes are wide and filled with happiness as it jogs forward, scanning the branches, flowers, and leaves. The narrow path winds between the lush greenery, and the scene is captured from a ground-level angle, providing a low and intimate perspective. The image has warm tones and a subtle grainy texture, with scattered daylight filtering through the leaves and plants above, creating a warm contrast that highlights the cat’s orange fur. The shot is clear and sharp, with a shallow depth of field that focuses solely on the cat’s movements and expressions."></video>
                     </div>
                     <div class="video-item">
                         <div class="video-label">Underwater</div>
                         <video class="video-player" src="videos/ours_underwater_real.mp4"
-                            autoplay loop muted playsinline></video>
+                            autoplay loop muted playsinline
+                            data-prompt="A dynamic FPV aerial view of a vibrant underwater suburban neighborhood, where colorful corals line the streets. The camera moves swiftly, capturing the intricate details of the coral formations and the diverse marine life swimming around. The streets are bustling with colorful fish and schools of tropical fish, creating a lively and energetic atmosphere. The water is crystal clear, with sunlight filtering through, casting a warm glow on the scene. The camera angle shifts slightly, providing a sense of depth and movement, as if the viewer is flying through this underwater world. A fast-paced, first-person view shot with a vivid and lifelike underwater setting."></video>
                     </div>
                     <div class="video-item">
                         <div class="video-label">Burger Boy</div>
                         <video class="video-player" src="videos/ours_burger.mp4"
-                            autoplay loop muted playsinline></video>
+                            autoplay loop muted playsinline
+                            data-prompt="A Chinese boy wearing glasses sits in a fast food restaurant, enjoying a delicious cheeseburger with his eyes closed. His hair is neatly combed, and he has a slightly dreamy expression. He holds the cheeseburger with both hands, taking a big bite. The background shows other diners and a colorful menu board with various fast food items. The lighting is warm and inviting, creating a cozy atmosphere. A close-up shot from a slightly lower angle, capturing the boy's joyful moment."></video>
                     </div>
 
                     <!-- Row 2 -->
                     <div class="video-item">
                         <div class="video-label">Kitchen</div>
                         <video class="video-player" src="videos/ours_kitchen.mp4"
-                            autoplay loop muted playsinline></video>
+                            autoplay loop muted playsinline
+                            data-prompt="A dynamic scene captured in the style of a vibrant food photography, showcasing a chef skillfully chopping onions in a bustling kitchen. The chef, a middle-aged man with a weathered face and determined expression, skillfully slices the onions with quick, practiced movements. He wears a white apron tied neatly around his waist and a chef's hat perched atop his head. The background is a well-equipped kitchen, with stainless steel appliances and countertops cluttered with various cooking tools and ingredients. Steam rises from a pot on the stove, and sunlight filters through the window, casting a warm glow. A medium shot with the chef at the center, capturing the intensity of his work."></video>
                     </div>
                     <div class="video-item">
                         <div class="video-label">Parrot</div>
                         <video class="video-player" src="videos/ours_parrot_real.mp4"
-                            autoplay loop muted playsinline></video>
+                            autoplay loop muted playsinline
+                            data-prompt="A close-up shot of a bright blue parrot's shimmering feathers, capturing the unique and vibrant colors in the light. The parrot's feathers glisten with a metallic sheen, showcasing a mix of deep indigos, vivid greens, and rich blues. Its eyes sparkle with curiosity, and it appears lively and alert, perched on a branch. The background is blurred, highlighting the parrot against a soft, warm environment. The photo has a naturalistic and lifelike quality, emphasizing the bird's detailed plumage and natural movements."></video>
                     </div>
                     <div class="video-item">
                         <div class="video-label">Romantic</div>
                         <video class="video-player" src="videos/ours_romantic.mp4"
-                            autoplay loop muted playsinline></video>
+                            autoplay loop muted playsinline
+                            data-prompt="A romantic scene in a nighttime cityscape where a man and a woman walk hand in hand under a starry sky, their faces illuminated by the soft glow of streetlights. They are dressed in casual yet elegant attire, the man in a dark blue suit and the woman in a light green dress. A wooden bucket is placed on the ground nearby, adding a touch of rustic charm. The couple’s expressions are filled with happiness and affection, as they gaze into each other’s eyes. The background features tall buildings with windows lit up, creating a warm and cozy atmosphere. The stars above twinkle brightly, enhancing the serene and intimate mood. The scene is captured in a medium shot with a slightly upward angle, capturing both the couple and the surrounding environment."></video>
                     </div>
 
                     <!-- Row 3 -->
                     <div class="video-item">
                         <div class="video-label">Dwarf</div>
                         <video class="video-player" src="videos/ours_60s/ours_dwarf.mp4"
-                            autoplay loop muted playsinline></video>
+                            autoplay loop muted playsinline
+                            data-prompt="A close-up view of a glass sphere containing a tranquil Zen garden. Inside, a small Eastern dwarf with weathered skin and a serene expression is raking the sand, meticulously creating intricate patterns with a bamboo rake. His movements are deliberate and meditative, enhancing the peaceful atmosphere of the scene. The background is blurred, revealing only hints of greenery and rocks, adding to the serene setting. The sphere itself is polished, reflecting the surroundings subtly. The camera angle captures the dwarf from a slightly elevated position, emphasizing his focused and contemplative pose."></video>
                     </div>
                     <div class="video-item">
-                        <div class="video-label">Indoor Scene</div>
-                        <video class="video-player" src="videos/df_indoor_1.mp4"
-                            autoplay loop muted playsinline></video>
+                        <div class="video-label">Flame Wisp</div>
+                        <video class="video-player" src="videos/ours_60s/ours_fire.mp4"
+                            autoplay loop muted playsinline
+                            data-prompt="A close-up shot of a living flame wisp darting through a bustling fantasy market at night. The wisp, flickering with an ethereal glow, moves swiftly among the stalls and vendors. The market is filled with colorful lanterns, glowing signs, and various magical items. The background features a crowded scene with people in exotic attire, bustling about their business under the soft light of the full moon. The air is filled with the scent of spices and incense. The camera angle is slightly elevated, capturing the dynamic movement of the wisp as it weaves through the market, creating a sense of wonder and enchantment."></video>
                     </div>
                     <div class="video-item">
                         <div class="video-label">Aerial View</div>
@@ -342,17 +351,20 @@
                     <div class="video-item">
                         <div class="video-label">Dogs</div>
                         <video class="video-player" src="videos/ours_60s/ours_doggy.mp4"
-                            autoplay loop muted playsinline></video>
+                            autoplay loop muted playsinline
+                            data-prompt="A winter scene in a snowy forest, where a litter of playful golden retriever puppies emerge from the snow. Their heads pop out, their fluffy fur glistening in the sunlight, and they wag their tails joyfully. They are covered in snow, with some paw prints leading away into the deep snow. One puppy is burying its nose in the snow, while another chases a small ball that has rolled nearby. The background shows dense evergreen trees and a gentle slope leading up to a clearing. The air is crisp and cold, with tiny snowflakes falling gently. A close-up shot from a slightly elevated angle, capturing the lively and energetic moment."></video>
                     </div>
                     <div class="video-item">
                         <div class="video-label">Astronaut</div>
                         <video class="video-player" src="videos/ours_60s/ours_astronaut.mp4"
-                            autoplay loop muted playsinline></video>
+                            autoplay loop muted playsinline
+                            data-prompt="An astronaut runs smoothly and appears almost weightless on the lunar surface, as seen from a low-angle shot that highlights the vast, desolate background of the moon. The moon's craters and rocky terrain are clearly visible, creating a stark contrast against the running astronaut who moves with graceful, fluid motions. The background features a muted, grayscale texture with subtle shadows and highlights, emphasizing the lunar landscape's rugged beauty. The astronaut wears a classic spacesuit with reflective fabric, adding to the sense of lightness and movement. A dynamic medium shot capturing the astronaut's forward momentum."></video>
                     </div>
                     <div class="video-item">
                         <div class="video-label">Running Pig</div>
                         <video class="video-player" src="videos/ours_60s/ours_pig.mp4"
-                            autoplay loop muted playsinline></video>
+                            autoplay loop muted playsinline
+                            data-prompt="A vibrant anime illustration in a dynamic motion style of a pink pig running rapidly towards the camera in a narrow alley in Tokyo. The pig has large, round eyes and a playful expression, with its ears perked up and body slightly hunched forward. It is wearing a small, pink bow tie, adding a cute touch to its appearance. The background showcases the bustling Tokyo alley, with colorful signs and neon lights reflecting off the wet pavement. The scene is captured from a low-angle perspective, emphasizing the pig's energetic movement."></video>
                     </div>
                 </div>
 
@@ -496,7 +508,7 @@
 
             <section id="ablation-studies" class="section">
                 <h2>Ablation</h2>
-                <p class="paragraph">Sink Size Ablation: increasing sink tokens sharpens scene memory but also adds compute overhead. We sweep across six sink sizes to illustrate the fidelity versus stability trade-offs.</p>
+                <p class="paragraph">Sink Size Ablation: increasing sink tokens reduces aesthetic drift and improve consistency.</p>
                 <div class="video-grid-3x2">
                     <div class="video-item">
                         <div class="video-label">Sink Size 0</div>
@@ -536,7 +548,7 @@
                     </div>
                 </div>
 
-                <p class="paragraph add-top-padding">Component Analysis: Deep Sink (DS) and Participative Compression (PC) can be layered on top of the vanilla baseline. The clips below highlight how each component progressively improves long-horizon coherence.</p>
+                <p class="paragraph add-top-padding">Component Analysis: Deep Sink (DS) and Participative Compression (PC) can be layered on top of the vanilla baseline. The clips below highlight how each component progressively improves long video generation.</p>
                 <div class="video-grid-3x1">
                     <div class="video-item">
                         <div class="video-label">Baseline</div>
@@ -564,7 +576,7 @@
             <section id="conclusion" class="section">
                 <h2>Conclusion</h2>
 
-                <p>In this work, we propose Deep Forcing, a training-free approach that mitigates error accumulation in autoregressive long video generation through two key mechanisms: Deep Sink and Participative Compression. By exploiting the inherent deep attention sink behavior in pre-trained models, our method enables stable minute-long video generation while preserving visual fidelity and motion dynamics. Extensive experiments across VBench-Long, user studies, and VLM evaluation demonstrate that our training-free paradigm achieves strong performance competitive with training-based methods, offering a practical and efficient solution for long-form autoregressive video diffusion. </p>
+                <p>In this work, we propose Deep Forcing, a training-free framework that mitigates error accumulation in autoregressive long video generation through two key mechanisms: Deep Sink and Participative Compression. By exploiting the inherent deep attention sink behavior in pre-trained models, our method enables minute-long video generation while preserving visual fidelity and motion dynamics. Extensive experiments across VBench-Long, user studies, and VLM evaluation demonstrate that our training-free framework achieves strong performance competitive with training-based methods.</p>
 
             <div class="citation add-top-padding">
                 <h1 id="citation">Citation</h1>
