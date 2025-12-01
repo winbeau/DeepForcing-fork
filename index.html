@@ -148,7 +148,7 @@
             </div>
 
             <div class="mini-tldr">
-                <p><strong>All videos generated with a single prompt, no speed-up, no recaching.</strong></p>
+                <p><strong>All videos generated from a single prompt, shown at 1× speed, no re-caching.</strong></p>
             </div>
 
             <div class="image-container">
@@ -246,9 +246,9 @@
                     <!-- <p> (a) baseline visual instruction tuning, (b) re-injecting visual features from the <i>post</i>-projection layer, (c) re-injecting from the <i>pre</i>-projection layer, and (d) the proposed visual representation alignment. </p>
                     <p>(e) Layer-wise alignment between visual tokens in MLLMs and vision encoder features measured by CKNNA, with shaded regions highlighting middle layers that are especially important for visual understanding. (f) Benchmark performance corresponding to (a–d) </p> -->
                     <!-- <p><b>Deep Sink:</b> Video generation requires preserving deep historical context (40-60% of cache) rather than just initial frames. As Figure 4 shows, deeper sinks reduce aesthetic drift and improve consistency by maintaining intermediate frames as anchors. <b>Participative Compression:</b> Redundant tokens still accumulate, diluting attention and causing degeneration. PC prunes tokens with negligible attention while retaining contextually relevant ones, preventing error accumulation.</p> -->
-                    <p><b>Deep Sink:</b> Video generation requires preserving deep historical context (40-60% of cache) rather than just initial frames. As Figure shows, deeper sinks reduce aesthetic drift and improve consistency by maintaining intermediate frames as anchors.</p>
+                    <p><b>Deep Sink:</b> Our analysis reveals attention distributes across both early and intermediate frames—unlike LLM sinks preserving only few initial tokens—requiring deep sink preservation (40-60%) to maintain fidelity beyond training length.</p>
 
-                    <p><b>Participative Compression:</b> Redundant tokens still accumulate, diluting attention and causing degeneration. PC prunes tokens with negligible attention while retaining contextually relevant ones, preventing error accumulation.</p>
+                    <p><b>Participative Compression:</b> To prevent quality degeneration from attention dilution caused by error accumulation during extreme out-of-distribution long-context extrapolation.</p>
 
                     <!-- <p>(a) Attention analysis revealing distributed patterns across the cache. (b) Token importance scoring and Top-C selection. (c) Competitive performance with training-based approaches despite being training-free.</p> -->
                 </div>
