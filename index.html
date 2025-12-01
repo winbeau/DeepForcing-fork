@@ -155,7 +155,7 @@
                 <div class="video-grid">
 
                     <div class="video-item">
-                    <div class="video-title">Rolling Forcing [Liu et al, arxiv'25]</div>
+                    <div class="video-title">Rolling Forcing</div>
                     <video
                         class="video-player"
                         src="videos/roll_city.mp4"
@@ -181,7 +181,7 @@
                     </div>
 
                     <div class="video-item">
-                    <div class="video-title">LongLive [Yang et al, arxiv'25]</div>
+                    <div class="video-title">LongLive</div>
                     <video
                         class="video-player"
                         src="videos/long_dog.mp4"
@@ -227,7 +227,7 @@
 
             <div class="base-row section">
                 <p class="explain">
-                    <strong>Deep Forcing</strong> is a training-free framework that enables stable long-video generation in autoregressive video diffusion models. By combining <strong>Deep Sink</strong>—which maintains global temporal coherence through persistent, phase-aligned sink tokens—with <strong>Participative Compression</strong>—which selectively retains only contextually relevant tokens while pruning redundant history—Deep Forcing achieves <strong>more than 12× length extrapolation</strong> (5s → 60s+) without fine-tuning. This approach delivers superior imaging and aesthetic quality compared to training-based methods while preserving temporal consistency and real-time streaming capability.
+                    <strong>Deep Forcing</strong> is a training-free framework that enables stable long-video generation in autoregressive video diffusion models. By combining <strong>Deep Sink</strong>—which maintains global temporal coherence through persistent, RoPE-aligned sink tokens—with <strong>Participative Compression</strong>—which selectively retains only contextually relevant tokens while pruning redundant history—Deep Forcing achieves <strong>more than 12× length extrapolation</strong> (5s → 60s+) without fine-tuning. This approach delivers superior imaging and aesthetic quality compared to training-based methods while preserving real-time streaming capability.
                 </p>
             </div>
 
@@ -281,9 +281,7 @@
             <section id="visual-representation-alignment" class="section">
                 <h2>Qualitative Results</h2>
                 <p>
-                    We first showcase long-horizon rollouts from Deep Forcing alone, and then
-                    compare it against Self-Forcing and other baselines on shared prompts.
-                    Model indicators are shown in the first row of each grid.
+                    Qualitative results demonstrating the capabilities of Deep Forcing.
                 </p>
 
                 <!-- 1) Ours only: 3 x 4 grid (12 clips) -->
@@ -301,15 +299,15 @@
                             autoplay loop muted playsinline></video>
                     </div>
                     <div class="video-item">
-                        <div class="video-label"></div>
+                        <div class="video-label">Burger Boy</div>
                         <video class="video-player" src="videos/ours_burger.mp4"
                             autoplay loop muted playsinline></video>
                     </div>
 
                     <!-- Row 2 -->
                     <div class="video-item">
-                        <div class="video-label">Dwarf</div>
-                        <video class="video-player" src="videos/ours_dwarf.mp4"
+                        <div class="video-label">Kitchen</div>
+                        <video class="video-player" src="videos/ours_kitchen.mp4"
                             autoplay loop muted playsinline></video>
                     </div>
                     <div class="video-item">
@@ -318,15 +316,15 @@
                             autoplay loop muted playsinline></video>
                     </div>
                     <div class="video-item">
-                        <div class="video-label">Kitchen</div>
-                        <video class="video-player" src="videos/ours_kitchen.mp4"
+                        <div class="video-label">Romantic</div>
+                        <video class="video-player" src="videos/ours_romantic.mp4"
                             autoplay loop muted playsinline></video>
                     </div>
 
                     <!-- Row 3 -->
                     <div class="video-item">
-                        <div class="video-label"></div>
-                        <video class="video-player" src="videos/ddd.mp4"
+                        <div class="video-label">Dwarf</div>
+                        <video class="video-player" src="videos/ours_60s/ours_dwarf.mp4"
                             autoplay loop muted playsinline></video>
                     </div>
                     <div class="video-item">
@@ -347,21 +345,21 @@
                             autoplay loop muted playsinline></video>
                     </div>
                     <div class="video-item">
-                        <div class="video-label">Long-Haul Camera</div>
-                        <video class="video-player" src="videos/df_longhaul_1.mp4"
+                        <div class="video-label">Astronaut</div>
+                        <video class="video-player" src="videos/ours_60s/ours_astronaut.mp4"
                             autoplay loop muted playsinline></video>
                     </div>
                     <div class="video-item">
-                        <div class="video-label">[Another Prompt]</div>
-                        <video class="video-player" src="videos/df_extra_1.mp4"
+                        <div class="video-label">Running Pig</div>
+                        <video class="video-player" src="videos/ours_60s/ours_pig.mp4"
                             autoplay loop muted playsinline></video>
                     </div>
                 </div>
 
                 <!-- 2) Ours vs baselines: 4 x 4 grid (기존 그대로) -->
-                <h3 id="comparison">Comparison with baselines on shared prompts</h3>
+                <h3 id="comparison" class="comparison-heading">Comparison with baselines on shared prompts</h3>
                 <p class="paragraph">
-                    We zoom in on matched prompts to make side-by-side comparisons easier. Each 2×2 view groups the same scenario across competing methods so you can quickly gauge temporal fidelity, motion quality, and recovery behavior as you flip through the carousel.
+                    Qualitative comparisons of Deep Forcing against Self-Forcing and other baselines on shared prompts.
                 </p>
 
                 <div class="comparison-slider">

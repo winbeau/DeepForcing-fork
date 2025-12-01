@@ -1302,6 +1302,8 @@ pre {
   color: #fff;
   font-size: 0.9rem;
   z-index: 3;
+  opacity: 0;
+  transition: opacity 0.25s ease;
 }
 
 .video-control-btn {
@@ -1421,7 +1423,14 @@ pre {
   gap: 6px;
   cursor: pointer;
   z-index: 3;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: background 0.2s ease, transform 0.2s ease, opacity 0.25s ease;
+  opacity: 0;
+}
+
+.video-item:hover .video-controls,
+.video-item:hover .video-prompt-btn,
+.video-item:hover .video-toggle-hint {
+  opacity: 1;
 }
 
 .video-prompt-btn:hover {
@@ -1479,6 +1488,10 @@ pre {
   white-space: pre-wrap;
   line-height: 1.6;
   color: var(--light-text);
+}
+
+.comparison-heading {
+  margin-top: 3rem;
 }
 
 .comparison-slider {
