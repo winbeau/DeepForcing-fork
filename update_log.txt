@@ -1,0 +1,25 @@
+🎉 检测到新的更新！
+时间: 2025-12-06 18:20:13
+
+📝 更新内容:
+
+⬇️  正在拉取更新...
+
+✅ 发现Python代码文件！代码可能已经发布！
+请检查以下文件:
+
+📖 README.md 内容：
+<div align="center">
+<h1>Deep Forcing: Training-Free Long Video Generation with Deep Sink and Participative Compression</h1>
+
+[**Jung Yi**](https://yj-142150.github.io/jungyi/) · [**Wooseok Jang**](https://scholar.google.com/citations?user=7cyLEQ0AAAAJ&hl=en/) · [**Paul Hyunbin Cho**](https://openreview.net/profile?id=~Paul_Hyunbin_Cho1)<sup></sup> · [**Jisu Nam**](https://nam-jisu.github.io/)<sup></sup> · [**Heeji Yoon**](https://yoon-heez.github.io/)<sup></sup> · [**Seungryong Kim**](https://cvlab.korea.ac.kr)<sup></sup>
+
+<sup></sup>KAIST AI&emsp;
+
+
+
+Coming Soon! Please stay tuned. Project page can be found at: [https://cvlab-kaist.github.io/DeepForcing/](https://cvlab-kaist.github.io/DeepForcing/)
+
+Try to... 
+
+🚀 建议立即查看仓库并开始复现！
