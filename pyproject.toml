@@ -1,0 +1,117 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "deepforcing"
+version = "0.1.0"
+description = "Deep Forcing: training-free long-form video generation via autoregressive diffusion with Deep Sink and Participative Compression"
+readme = "README.md"
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    # PyTorch ecosystem
+    "torch>=2.4.0",
+    "torchvision>=0.19.0",
+    "torchaudio>=2.4.0",
+    "torchao>=0.6.1",
+    "flash-attn @ https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3+cu12torch2.5cxx11abiFALSE-cp310-cp310-linux_x86_64.whl ; sys_platform == 'linux' and platform_machine == 'x86_64' and python_version == '3.10'",
+
+    # Diffusion / HuggingFace
+    "diffusers==0.31.0",
+    "transformers>=4.49.0",
+    "tokenizers>=0.20.3",
+    "accelerate>=1.1.1",
+    "huggingface-hub[cli]>=0.36.0",
+
+    # CLIP
+    "clip",
+    "open-clip-torch>=3.2.0",
+
+    # Video / Image
+    "av==13.1.0",
+    "opencv-python>=4.9.0.80",
+    "imageio>=2.37.2",
+    "imageio-ffmpeg>=0.6.0",
+    "scikit-image>=0.25.2",
+    "pillow>=12.0.0",
+
+    # Data / Config
+    "numpy==1.24.4",
+    "omegaconf>=2.3.0",
+    "easydict>=1.13",
+    "einops>=0.8.1",
+    "pydantic==2.10.6",
+    "lmdb>=1.7.5",
+
+    # NLP / Tokenization
+    "sentencepiece>=0.2.1",
+    "ftfy>=6.3.1",
+
+    # Web demo
+    "flask>=3.1.2",
+    "flask-socketio>=5.5.1",
+    "starlette>=0.50.0",
+    "dominate>=2.9.1",
+
+    # ONNX
+    "onnx>=1.20.0",
+    "onnxruntime>=1.23.2",
+    "onnxscript>=0.5.6",
+    "onnxconverter-common>=1.16.0",
+
+    # Evaluation / Visualization
+    "pycocotools>=2.0.10",
+    "matplotlib>=3.10.7",
+
+    # Misc
+    "dashscope>=1.25.3",
+    "tqdm>=4.67.1",
+    "wandb>=0.23.1",
+    "requests>=2.32.5",
+    "packaging>=25.0",
+]
+
+[project.optional-dependencies]
+tensorrt = [
+    "nvidia-pyindex",
+    "nvidia-tensorrt",
+    "pycuda",
+]
+dev = [
+    "pytest>=9.0.2",
+    "black>=25.12.0",
+    "isort>=7.0.0",
+]
+
+[tool.uv]
+environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64'",
+]
+
+[[tool.uv.index]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu121"
+explicit = true
+
+[[tool.uv.index]]
+name = "nvidia"
+url = "https://pypi.ngc.nvidia.com"
+
+[tool.uv.sources]
+torch = { index = "pytorch" }
+torchvision = { index = "pytorch" }
+torchaudio = { index = "pytorch" }
+clip = { git = "https://github.com/openai/CLIP.git" }
+
+[tool.hatch.build.targets.wheel]
+packages = [
+    "model",
+    "pipeline",
+    "wan",
+    "trainer",
+    "utils",
+    "demo_utils",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
