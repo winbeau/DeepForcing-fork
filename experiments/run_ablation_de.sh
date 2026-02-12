@@ -21,6 +21,10 @@ CHECKPOINT_PATH="${CHECKPOINT_PATH:-checkpoints/self_forcing_dmd.pt}"
 NUM_FRAMES="${NUM_FRAMES:-81}"
 NUM_PROMPTS="${NUM_PROMPTS:-25}"
 ROUND="${ROUND:-ALL}"  # ALL | D | E
+GPU0="${GPU0:-0}"
+GPU1="${GPU1:-1}"
+GPU2="${GPU2:-2}"
+GPU3="${GPU3:-3}"
 
 PROMPT_SRC="prompts/MovieGenVideoBench_extended.txt"
 PROMPT_TXT="experiments/prompts_25.txt"
@@ -75,7 +79,6 @@ run_case() {
   local exp_root="videos/${exp_name}"
   local out_dir="${exp_root}/${case_name}"
   mkdir -p "$out_dir"
-  cp "$PROMPT_CSV" "${exp_root}/prompts.csv"
 
   python inference.py \
     --config_path "$config_path" \
@@ -92,35 +95,53 @@ run_case() {
   rename_videos "$out_dir" "$NUM_PROMPTS"
 }
 
+prepare_exp_root() {
+  local exp_name="$1"
+  local exp_root="videos/${exp_name}"
+  mkdir -p "$exp_root"
+  # Write once per experiment group to avoid concurrent copy races.
+  python - "$PROMPT_CSV" "${exp_root}/prompts.csv" <<'PY'
+import shutil
+import sys
+
+src, dst = sys.argv[1], sys.argv[2]
+shutil.copyfile(src, dst)
+PY
+}
+
 run_group_d() {
   echo "=== Exp-D: sink [0..5], top_c=2, recent=4 ==="
+  echo "Using GPUs: ${GPU0},${GPU1},${GPU2},${GPU3}"
+  prepare_exp_root "Exp-D"
 
   # Round D-1 (4 GPUs)
-  CUDA_VISIBLE_DEVICES=0 run_case "Exp-D" "sink_00_topc2_recent4" "0" "6" "4" &
-  CUDA_VISIBLE_DEVICES=1 run_case "Exp-D" "sink_01_topc2_recent4" "1" "7" "4" &
-  CUDA_VISIBLE_DEVICES=2 run_case "Exp-D" "sink_02_topc2_recent4" "2" "8" "4" &
-  CUDA_VISIBLE_DEVICES=3 run_case "Exp-D" "sink_03_topc2_recent4" "3" "9" "4" &
+  CUDA_VISIBLE_DEVICES="${GPU0}" run_case "Exp-D" "sink_00_topc2_recent4" "0" "6" "4" &
+  CUDA_VISIBLE_DEVICES="${GPU1}" run_case "Exp-D" "sink_01_topc2_recent4" "1" "7" "4" &
+  CUDA_VISIBLE_DEVICES="${GPU2}" run_case "Exp-D" "sink_02_topc2_recent4" "2" "8" "4" &
+  CUDA_VISIBLE_DEVICES="${GPU3}" run_case "Exp-D" "sink_03_topc2_recent4" "3" "9" "4" &
   wait
 
   # Round D-2 (remaining 2 cases)
-  CUDA_VISIBLE_DEVICES=0 run_case "Exp-D" "sink_04_topc2_recent4" "4" "10" "4" &
-  CUDA_VISIBLE_DEVICES=1 run_case "Exp-D" "sink_05_topc2_recent4" "5" "11" "4" &
+  CUDA_VISIBLE_DEVICES="${GPU0}" run_case "Exp-D" "sink_04_topc2_recent4" "4" "10" "4" &
+  CUDA_VISIBLE_DEVICES="${GPU1}" run_case "Exp-D" "sink_05_topc2_recent4" "5" "11" "4" &
   wait
 }
 
 run_group_e() {
   echo "=== Exp-E: sink [0..5], top_c=0, recent=4 ==="
+  echo "Using GPUs: ${GPU0},${GPU1},${GPU2},${GPU3}"
+  prepare_exp_root "Exp-E"
 
   # Round E-1 (4 GPUs)
-  CUDA_VISIBLE_DEVICES=0 run_case "Exp-E" "sink_00_topc0_recent4" "0" "4" "4" &
-  CUDA_VISIBLE_DEVICES=1 run_case "Exp-E" "sink_01_topc0_recent4" "1" "5" "4" &
-  CUDA_VISIBLE_DEVICES=2 run_case "Exp-E" "sink_02_topc0_recent4" "2" "6" "4" &
-  CUDA_VISIBLE_DEVICES=3 run_case "Exp-E" "sink_03_topc0_recent4" "3" "7" "4" &
+  CUDA_VISIBLE_DEVICES="${GPU0}" run_case "Exp-E" "sink_00_topc0_recent4" "0" "4" "4" &
+  CUDA_VISIBLE_DEVICES="${GPU1}" run_case "Exp-E" "sink_01_topc0_recent4" "1" "5" "4" &
+  CUDA_VISIBLE_DEVICES="${GPU2}" run_case "Exp-E" "sink_02_topc0_recent4" "2" "6" "4" &
+  CUDA_VISIBLE_DEVICES="${GPU3}" run_case "Exp-E" "sink_03_topc0_recent4" "3" "7" "4" &
   wait
 
   # Round E-2 (remaining 2 cases)
-  CUDA_VISIBLE_DEVICES=0 run_case "Exp-E" "sink_04_topc0_recent4" "4" "8" "4" &
-  CUDA_VISIBLE_DEVICES=1 run_case "Exp-E" "sink_05_topc0_recent4" "5" "9" "4" &
+  CUDA_VISIBLE_DEVICES="${GPU0}" run_case "Exp-E" "sink_04_topc0_recent4" "4" "8" "4" &
+  CUDA_VISIBLE_DEVICES="${GPU1}" run_case "Exp-E" "sink_05_topc0_recent4" "5" "9" "4" &
   wait
 }
 
