@@ -11,6 +11,7 @@ Example:
 from __future__ import annotations
 
 import argparse
+import inspect
 import os
 from pathlib import Path
 
@@ -68,6 +69,19 @@ def resolve_token(cli_token: str | None) -> str | None:
     return os.getenv("HF_TOKEN") or os.getenv("HUGGING_FACE_HUB_TOKEN")
 
 
+def call_with_supported_kwargs(method, kwargs: dict):
+    """
+    Call method with only the kwargs supported by the installed huggingface_hub version.
+    """
+    sig = inspect.signature(method)
+    accepted = set(sig.parameters.keys())
+    filtered = {k: v for k, v in kwargs.items() if k in accepted}
+    dropped = [k for k in kwargs.keys() if k not in accepted]
+    if dropped:
+        print(f"[upload] {method.__name__} does not support args: {dropped}; skipping them.")
+    return method(**filtered)
+
+
 def main() -> None:
     args = parse_args()
     local_dir = args.local_dir.resolve()
@@ -101,26 +115,24 @@ def main() -> None:
         ]
 
     path_in_repo = args.path_in_repo.strip("/")
+    common_kwargs = dict(
+        repo_id=args.repo_id,
+        repo_type="dataset",
+        folder_path=str(local_dir),
+        path_in_repo=path_in_repo,
+        allow_patterns=allow_patterns,
+        commit_message=args.commit_message,
+    )
 
     # Prefer upload_large_folder when available for large trees.
     if hasattr(api, "upload_large_folder"):
-        api.upload_large_folder(
-            repo_id=args.repo_id,
-            repo_type="dataset",
-            folder_path=str(local_dir),
-            path_in_repo=path_in_repo,
-            allow_patterns=allow_patterns,
-            commit_message=args.commit_message,
-        )
+        try:
+            call_with_supported_kwargs(api.upload_large_folder, common_kwargs)
+        except TypeError:
+            # Older versions may have stricter signatures; fallback to upload_folder.
+            call_with_supported_kwargs(api.upload_folder, common_kwargs)
     else:
-        api.upload_folder(
-            repo_id=args.repo_id,
-            repo_type="dataset",
-            folder_path=str(local_dir),
-            path_in_repo=path_in_repo,
-            allow_patterns=allow_patterns,
-            commit_message=args.commit_message,
-        )
+        call_with_supported_kwargs(api.upload_folder, common_kwargs)
 
     print(f"Upload complete: https://huggingface.co/datasets/{args.repo_id}")
 
