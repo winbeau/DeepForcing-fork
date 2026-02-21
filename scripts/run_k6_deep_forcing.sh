@@ -11,7 +11,7 @@ Options:
   --checkpoint <path>        Generator checkpoint (default: checkpoints/self_forcing_dmd.pt)
   --config <path>            Inference config (default: configs/self_forcing_dmd/self_forcing_dmd_sink10.yaml)
   --prompt-src <path>        Prompt source txt (default: prompts/MovieGenVideoBench_extended.txt)
-  --num-prompts <int>        Number of prompts from head of prompt-src (default: 25)
+  --num-prompts <int>        Number of prompts from head of prompt-src (default: 128)
   --num-output-frames <int>  Number of output latent frames (default: 120)
   --overwrite                Remove existing video_*.mp4 and rerun all indices
   -h, --help                 Show this help
@@ -27,7 +27,7 @@ OUTPUT_DIR="videos/k6_deep_forcing"
 CHECKPOINT="checkpoints/self_forcing_dmd.pt"
 CONFIG="configs/self_forcing_dmd/self_forcing_dmd_sink10.yaml"
 PROMPT_SRC="prompts/MovieGenVideoBench_extended.txt"
-NUM_PROMPTS=25
+NUM_PROMPTS=128
 NUM_OUTPUT_FRAMES=120
 OVERWRITE=0
 
