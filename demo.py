@@ -121,7 +121,12 @@ def initialize_vae_decoder(use_taehv=False, use_trt=False):
 vae_decoder = initialize_vae_decoder(use_taehv=False, use_trt=args.trt)
 
 transformer = WanDiffusionWrapper(is_causal=True)
-state_dict = torch.load(args.checkpoint_path, map_location="cpu")
+try:
+    state_dict = torch.load(args.checkpoint_path, map_location="cpu")
+except KeyError:
+    import io
+    with open(args.checkpoint_path, "rb") as f:
+        state_dict = torch.load(io.BytesIO(f.read()), map_location="cpu")
 transformer.load_state_dict(state_dict['generator_ema'])
 
 text_encoder.eval()
