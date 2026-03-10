@@ -124,9 +124,10 @@ transformer = WanDiffusionWrapper(is_causal=True)
 try:
     state_dict = torch.load(args.checkpoint_path, map_location="cpu")
 except KeyError:
-    import io
-    with open(args.checkpoint_path, "rb") as f:
-        state_dict = torch.load(io.BytesIO(f.read()), map_location="cpu")
+    import pickle
+    from torch.serialization import _open_zipfile_reader, _load
+    with _open_zipfile_reader(args.checkpoint_path) as reader:
+        state_dict = _load(reader, torch.device("cpu"), pickle)
 transformer.load_state_dict(state_dict['generator_ema'])
 
 text_encoder.eval()

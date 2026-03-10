@@ -81,11 +81,13 @@ if args.checkpoint_path:
     try:
         state_dict = torch.load(args.checkpoint_path, map_location="cpu")
     except KeyError:
-        # Workaround: PyTorch zip format detection can fail on some filesystems.
-        # Reading into BytesIO bypasses the issue.
-        import io
-        with open(args.checkpoint_path, "rb") as f:
-            state_dict = torch.load(io.BytesIO(f.read()), map_location="cpu")
+        # Workaround: PyTorch's Python-level _is_zipfile check can fail when
+        # the file doesn't start with PK magic bytes. Bypass it by calling
+        # the C++ zip reader directly.
+        import pickle
+        from torch.serialization import _open_zipfile_reader, _load
+        with _open_zipfile_reader(args.checkpoint_path) as reader:
+            state_dict = _load(reader, torch.device("cpu"), pickle)
     pipeline.generator.load_state_dict(state_dict['generator' if not args.use_ema else 'generator_ema'])
 
 pipeline = pipeline.to(dtype=torch.bfloat16)
