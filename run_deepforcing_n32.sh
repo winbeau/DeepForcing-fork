@@ -2,15 +2,28 @@
 # 4-GPU parallel inference — 32 prompts, 120 latent frames each
 set -e
 
+OUTPUT_DIR="${1:?Usage: bash run_deepforcing_n32.sh <output_dir>}"
+
 # ============ Configuration ============
 PROMPT_FILE="./prompts/MovieGenVideoBench_num32.txt"
 CONFIG_PATH="configs/self_forcing_dmd/self_forcing_dmd_sink10.yaml"
 CHECKPOINT_PATH="checkpoints/self_forcing_dmd.pt"
-OUTPUT_DIR="./output/num32_120frames"
 NUM_OUTPUT_FRAMES=120
 NUM_GPUS=4
 SEED=1356145
 # =======================================
+
+PIDS=()
+cleanup() {
+    echo ""
+    echo "Caught interrupt, killing all GPU processes..."
+    for pid in "${PIDS[@]}"; do
+        kill "$pid" 2>/dev/null
+    done
+    wait
+    exit 1
+}
+trap cleanup SIGINT SIGTERM
 
 TOTAL_PROMPTS=$(wc -l < "$PROMPT_FILE")
 PROMPTS_PER_GPU=$(( (TOTAL_PROMPTS + NUM_GPUS - 1) / NUM_GPUS ))
@@ -19,6 +32,7 @@ echo "=== 4-GPU Parallel Inference ==="
 echo "Total prompts: $TOTAL_PROMPTS"
 echo "Prompts per GPU: $PROMPTS_PER_GPU"
 echo "Latent frames: $NUM_OUTPUT_FRAMES"
+echo "Output: $OUTPUT_DIR"
 echo ""
 
 mkdir -p "$OUTPUT_DIR"
@@ -64,6 +78,7 @@ for gpu_id in $(seq 0 $((NUM_GPUS - 1))); do
         --use_ema \
         --save_with_index \
         --seed "$SEED" &
+    PIDS+=($!)
 done
 
 echo ""
