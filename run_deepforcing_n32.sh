@@ -26,6 +26,10 @@ Options:
   --prompt_file PATH      Prompt file (default: $PROMPT_FILE)
   --num_output_frames N   Latent frames (default: $NUM_OUTPUT_FRAMES)
   --seed N                Random seed (default: $SEED)
+
+GPU assignment:
+  - If CUDA_VISIBLE_DEVICES is unset, this script uses GPUs 0..N-1.
+  - If CUDA_VISIBLE_DEVICES is set, its visible GPU count must equal --num_gpus.
 EOF
     exit 1
 }
@@ -61,8 +65,35 @@ trap cleanup SIGINT SIGTERM
 TOTAL_PROMPTS=$(wc -l < "$PROMPT_FILE")
 PROMPTS_PER_GPU=$(( (TOTAL_PROMPTS + NUM_GPUS - 1) / NUM_GPUS ))
 
+GPU_ASSIGNMENT_SOURCE="default"
+GPU_IDS=()
+if [[ -n "${CUDA_VISIBLE_DEVICES:-}" ]]; then
+    visible_gpus=$(printf '%s' "$CUDA_VISIBLE_DEVICES" | tr -d '[:space:]')
+    IFS=',' read -r -a GPU_IDS <<< "$visible_gpus"
+
+    if [[ ${#GPU_IDS[@]} -ne "$NUM_GPUS" ]]; then
+        echo "Error: CUDA_VISIBLE_DEVICES specifies ${#GPU_IDS[@]} GPUs (${visible_gpus}), but --num_gpus is ${NUM_GPUS}."
+        exit 1
+    fi
+
+    for gpu_id in "${GPU_IDS[@]}"; do
+        if [[ -z "$gpu_id" ]]; then
+            echo "Error: CUDA_VISIBLE_DEVICES contains an empty GPU id."
+            exit 1
+        fi
+    done
+
+    GPU_ASSIGNMENT_SOURCE="env"
+else
+    for gpu_id in $(seq 0 $((NUM_GPUS - 1))); do
+        GPU_IDS+=("$gpu_id")
+    done
+fi
+
 echo "=== Multi-GPU Parallel Inference ==="
 echo "GPUs: $NUM_GPUS"
+echo "GPU assignment source: $GPU_ASSIGNMENT_SOURCE"
+echo "Physical GPUs: ${GPU_IDS[*]}"
 echo "Total prompts: $TOTAL_PROMPTS"
 echo "Prompts per GPU: $PROMPTS_PER_GPU"
 echo "Latent frames: $NUM_OUTPUT_FRAMES"
@@ -87,24 +118,25 @@ print(f'Generated {output_csv} with {len(prompts)} prompts')
 " "$PROMPT_FILE" "${OUTPUT_DIR}/prompts.csv"
 
 # ---------- Launch per-GPU inference ----------
-for gpu_id in $(seq 0 $((NUM_GPUS - 1))); do
-    start_line=$((gpu_id * PROMPTS_PER_GPU + 1))
-    end_line=$(( (gpu_id + 1) * PROMPTS_PER_GPU ))
+for worker_idx in $(seq 0 $((NUM_GPUS - 1))); do
+    physical_gpu="${GPU_IDS[$worker_idx]}"
+    start_line=$((worker_idx * PROMPTS_PER_GPU + 1))
+    end_line=$(( (worker_idx + 1) * PROMPTS_PER_GPU ))
     [ "$end_line" -gt "$TOTAL_PROMPTS" ] && end_line=$TOTAL_PROMPTS
 
-    # Extract this GPU's subset of prompts
-    tmp_file="${OUTPUT_DIR}/.prompts_gpu${gpu_id}.txt"
+    # Extract this worker's subset of prompts.
+    tmp_file="${OUTPUT_DIR}/.prompts_gpu${worker_idx}.txt"
     sed -n "${start_line},${end_line}p" "$PROMPT_FILE" > "$tmp_file"
 
     num_lines=$(wc -l < "$tmp_file")
     [ "$num_lines" -eq 0 ] && continue
 
-    gpu_out="${OUTPUT_DIR}/.tmp_gpu${gpu_id}"
+    gpu_out="${OUTPUT_DIR}/.tmp_gpu${worker_idx}"
     mkdir -p "$gpu_out"
 
-    echo "[GPU $gpu_id] prompts $((start_line - 1))-$((end_line - 1))  ($num_lines prompts)"
+    echo "[Worker $worker_idx -> GPU $physical_gpu] prompts $((start_line - 1))-$((end_line - 1))  ($num_lines prompts)"
 
-    CUDA_VISIBLE_DEVICES=$gpu_id python inference.py \
+    CUDA_VISIBLE_DEVICES=$physical_gpu python inference.py \
         --config_path "$CONFIG_PATH" \
         --output_folder "$gpu_out" \
         --checkpoint_path "$CHECKPOINT_PATH" \
@@ -123,9 +155,9 @@ echo "All GPUs finished!"
 
 # ---------- Rename to video_XXX.mp4 ----------
 echo "Renaming output files..."
-for gpu_id in $(seq 0 $((NUM_GPUS - 1))); do
-    offset=$((gpu_id * PROMPTS_PER_GPU))
-    gpu_out="${OUTPUT_DIR}/.tmp_gpu${gpu_id}"
+for worker_idx in $(seq 0 $((NUM_GPUS - 1))); do
+    offset=$((worker_idx * PROMPTS_PER_GPU))
+    gpu_out="${OUTPUT_DIR}/.tmp_gpu${worker_idx}"
     [ ! -d "$gpu_out" ] && continue
 
     for local_idx in $(seq 0 $((PROMPTS_PER_GPU - 1))); do
