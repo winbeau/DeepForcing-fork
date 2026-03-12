@@ -1,17 +1,50 @@
 #!/bin/bash
-# 4-GPU parallel inference — 32 prompts, 120 latent frames each
+# Multi-GPU parallel inference — 32 prompts, 120 latent frames each
 set -e
 
-OUTPUT_DIR="${1:?Usage: bash run_deepforcing_n32.sh <output_dir>}"
-
-# ============ Configuration ============
+# ============ Defaults ============
+OUTPUT_DIR=""
 PROMPT_FILE="./prompts/MovieGenVideoBench_num32.txt"
 CONFIG_PATH="configs/self_forcing_dmd/self_forcing_dmd_sink10.yaml"
 CHECKPOINT_PATH="checkpoints/self_forcing_dmd.pt"
 NUM_OUTPUT_FRAMES=120
 NUM_GPUS=4
 SEED=1356145
-# =======================================
+# ==================================
+
+usage() {
+    cat <<EOF
+Usage: bash run_deepforcing_n32.sh --output_dir <dir> [options]
+
+Required:
+  --output_dir DIR        Output directory
+
+Options:
+  --num_gpus N            Number of GPUs (default: 4)
+  --config_path PATH      Config file (default: $CONFIG_PATH)
+  --checkpoint_path PATH  Checkpoint file (default: $CHECKPOINT_PATH)
+  --prompt_file PATH      Prompt file (default: $PROMPT_FILE)
+  --num_output_frames N   Latent frames (default: $NUM_OUTPUT_FRAMES)
+  --seed N                Random seed (default: $SEED)
+EOF
+    exit 1
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --output_dir)        OUTPUT_DIR="$2"; shift 2 ;;
+        --num_gpus)          NUM_GPUS="$2"; shift 2 ;;
+        --config_path)       CONFIG_PATH="$2"; shift 2 ;;
+        --checkpoint_path)   CHECKPOINT_PATH="$2"; shift 2 ;;
+        --prompt_file)       PROMPT_FILE="$2"; shift 2 ;;
+        --num_output_frames) NUM_OUTPUT_FRAMES="$2"; shift 2 ;;
+        --seed)              SEED="$2"; shift 2 ;;
+        -h|--help)           usage ;;
+        *) echo "Unknown option: $1"; usage ;;
+    esac
+done
+
+[ -z "$OUTPUT_DIR" ] && { echo "Error: --output_dir is required"; usage; }
 
 PIDS=()
 cleanup() {
@@ -28,10 +61,12 @@ trap cleanup SIGINT SIGTERM
 TOTAL_PROMPTS=$(wc -l < "$PROMPT_FILE")
 PROMPTS_PER_GPU=$(( (TOTAL_PROMPTS + NUM_GPUS - 1) / NUM_GPUS ))
 
-echo "=== 4-GPU Parallel Inference ==="
+echo "=== Multi-GPU Parallel Inference ==="
+echo "GPUs: $NUM_GPUS"
 echo "Total prompts: $TOTAL_PROMPTS"
 echo "Prompts per GPU: $PROMPTS_PER_GPU"
 echo "Latent frames: $NUM_OUTPUT_FRAMES"
+echo "Config: $CONFIG_PATH"
 echo "Output: $OUTPUT_DIR"
 echo ""
 
