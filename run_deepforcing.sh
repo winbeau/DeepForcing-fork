@@ -1,6 +1,7 @@
 #!/bin/bash
 # Multi-GPU parallel inference for DeepForcing experiments.
 set -e
+shopt -s nullglob
 
 # ============ Defaults ============
 OUTPUT_DIR=""
@@ -61,9 +62,16 @@ done
 
 PIDS=()
 WORKER_INDICES=()
+WORKER_OFFSETS=()
+WORKER_OUTPUT_DIRS=()
+WATCHER_PID=""
 cleanup() {
     echo ""
     echo "Caught interrupt, killing all GPU processes..."
+    if [[ -n "$WATCHER_PID" ]]; then
+        kill "$WATCHER_PID" 2>/dev/null || true
+        wait "$WATCHER_PID" 2>/dev/null || true
+    fi
     for pid in "${PIDS[@]}"; do
         kill "$pid" 2>/dev/null
     done
@@ -133,6 +141,58 @@ PROFILE_ARGS=()
 if [[ "$PROFILE" -eq 1 ]]; then
     PROFILE_ARGS+=(--profile)
 fi
+MODEL_TAG="ema"
+
+rename_worker_outputs() {
+    local worker_idx="$1"
+    local offset="$2"
+    local gpu_out="$3"
+    local require_stable="$4"
+    local f base raw_idx local_idx global_idx target sz1 sz2
+
+    for f in "$gpu_out"/*-*_"${MODEL_TAG}".mp4; do
+        [ -f "$f" ] || continue
+        base=$(basename "$f")
+        raw_idx=${base%%-*}
+        [[ "$raw_idx" =~ ^[0-9]+$ ]] || continue
+
+        local_idx=$((10#$raw_idx))
+        global_idx=$((offset + local_idx))
+        [ "$global_idx" -ge "$TOTAL_PROMPTS" ] && continue
+
+        target="${OUTPUT_DIR}/video_$(printf '%03d' "$global_idx").mp4"
+        [ -f "$target" ] && continue
+
+        if [ "$require_stable" -eq 1 ]; then
+            sz1=$(stat -c%s "$f" 2>/dev/null) || continue
+            sleep 1
+            sz2=$(stat -c%s "$f" 2>/dev/null) || continue
+            [ "$sz1" = "$sz2" ] || continue
+        fi
+
+        mv -f -- "$f" "$target"
+        echo "  renamed: worker ${worker_idx} ${base} -> $(basename "$target")"
+    done
+}
+
+rename_all_outputs() {
+    local require_stable="$1"
+    local idx worker_idx offset gpu_out
+
+    for idx in "${!WORKER_INDICES[@]}"; do
+        worker_idx="${WORKER_INDICES[$idx]}"
+        offset="${WORKER_OFFSETS[$idx]}"
+        gpu_out="${WORKER_OUTPUT_DIRS[$idx]}"
+        rename_worker_outputs "$worker_idx" "$offset" "$gpu_out" "$require_stable"
+    done
+}
+
+watch_output_renames() {
+    while true; do
+        rename_all_outputs 1
+        sleep 2
+    done
+}
 
 # ---------- Generate prompts.csv ----------
 python3 -c "
@@ -193,7 +253,13 @@ with open(sys.argv[1], 'r', encoding='utf-8') as f:
         "${PROFILE_ARGS[@]}" > >(tee "$worker_log") 2>&1 &
     PIDS+=($!)
     WORKER_INDICES+=("$worker_idx")
+    WORKER_OFFSETS+=($((start_line - 1)))
+    WORKER_OUTPUT_DIRS+=("$gpu_out")
 done
+
+watch_output_renames &
+WATCHER_PID=$!
+echo "Output rename watcher started (PID $WATCHER_PID)"
 
 echo ""
 echo "Waiting for all GPUs to finish..."
@@ -208,30 +274,21 @@ for pid_index in "${!PIDS[@]}"; do
 done
 echo "All GPUs finished!"
 
-# ---------- Rename to video_XXX.mp4 ----------
-echo "Renaming output files..."
-missing_outputs=0
-renamed_outputs=0
-for worker_idx in $(seq 0 $((NUM_GPUS - 1))); do
-    offset=$((worker_idx * PROMPTS_PER_GPU))
-    gpu_out="${OUTPUT_DIR}/.tmp_gpu${worker_idx}"
-    [ ! -d "$gpu_out" ] && continue
+kill "$WATCHER_PID" 2>/dev/null || true
+wait "$WATCHER_PID" 2>/dev/null || true
+WATCHER_PID=""
 
-    for local_idx in $(seq 0 $((PROMPTS_PER_GPU - 1))); do
-        src="${gpu_out}/${local_idx}-0_ema.mp4"
-        global_idx=$((offset + local_idx))
-        [ "$global_idx" -ge "$TOTAL_PROMPTS" ] && continue
-        if [ ! -f "$src" ]; then
-            echo "ERROR: missing output for prompt index ${global_idx}: ${src}"
-            echo "       See ${OUTPUT_DIR}/worker_${worker_idx}.log"
-            missing_outputs=$((missing_outputs + 1))
-            continue
-        fi
-        dst="${OUTPUT_DIR}/video_$(printf '%03d' "$global_idx").mp4"
-        mv -f "$src" "$dst"
-        renamed_outputs=$((renamed_outputs + 1))
-        echo "  ${dst}"
-    done
+# ---------- Final rename sweep ----------
+echo "Final rename sweep..."
+rename_all_outputs 0
+
+missing_outputs=0
+for global_idx in $(seq 0 $((TOTAL_PROMPTS - 1))); do
+    expected="${OUTPUT_DIR}/video_$(printf '%03d' "$global_idx").mp4"
+    if [ ! -f "$expected" ]; then
+        echo "ERROR: missing final output ${expected}"
+        missing_outputs=$((missing_outputs + 1))
+    fi
 done
 
 if [ "$failed_workers" -ne 0 ] || [ "$missing_outputs" -ne 0 ]; then
@@ -240,8 +297,9 @@ if [ "$failed_workers" -ne 0 ] || [ "$missing_outputs" -ne 0 ]; then
     exit 1
 fi
 
-if [ "$renamed_outputs" -ne "$TOTAL_PROMPTS" ]; then
-    echo "ERROR: expected ${TOTAL_PROMPTS} videos, renamed ${renamed_outputs}."
+video_count=$(find "$OUTPUT_DIR" -maxdepth 1 -type f -name 'video_*.mp4' | wc -l | tr -d ' ')
+if [ "$video_count" -ne "$TOTAL_PROMPTS" ]; then
+    echo "ERROR: expected ${TOTAL_PROMPTS} videos, found ${video_count}."
     echo "Temporary outputs and worker logs are preserved under ${OUTPUT_DIR}/"
     exit 1
 fi
@@ -252,4 +310,4 @@ rm -rf "${OUTPUT_DIR}/.tmp_gpu"* "${OUTPUT_DIR}/.prompts_gpu"*
 echo ""
 echo "=== Done ==="
 echo "Output: ${OUTPUT_DIR}/"
-echo "Videos: ${renamed_outputs} / ${TOTAL_PROMPTS}"
+echo "Videos: ${video_count} / ${TOTAL_PROMPTS}"
