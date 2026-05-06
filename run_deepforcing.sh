@@ -11,6 +11,7 @@ NUM_FRAMES=120
 NUM_GPUS=4
 SEED=1356145
 PROFILE=0
+PYTHON_CMD=(uv run python)
 # ==================================
 
 usage() {
@@ -59,13 +60,14 @@ done
 [ -z "$OUTPUT_DIR" ] && { echo "Error: --output_dir is required"; usage; }
 
 PIDS=()
+WORKER_INDICES=()
 cleanup() {
     echo ""
     echo "Caught interrupt, killing all GPU processes..."
     for pid in "${PIDS[@]}"; do
         kill "$pid" 2>/dev/null
     done
-    wait
+    wait || true
     exit 1
 }
 trap cleanup SIGINT SIGTERM
@@ -104,6 +106,7 @@ echo "GPU assignment source: $GPU_ASSIGNMENT_SOURCE"
 echo "Physical GPUs: ${GPU_IDS[*]}"
 echo "Output frames: $NUM_FRAMES"
 echo "Profile: $PROFILE"
+echo "Python command: ${PYTHON_CMD[*]}"
 echo "Config: $CONFIG_PATH"
 echo "Output: $OUTPUT_DIR"
 if [[ -n "${MASTER_PORT:-}" ]]; then
@@ -116,6 +119,7 @@ echo "Prompts per GPU: $PROMPTS_PER_GPU"
 echo ""
 
 mkdir -p "$OUTPUT_DIR"
+rm -rf "${OUTPUT_DIR}/.tmp_gpu"* "${OUTPUT_DIR}/.prompts_gpu"*
 
 PROFILE_ARGS=()
 if [[ "$PROFILE" -eq 1 ]]; then
@@ -152,10 +156,11 @@ for worker_idx in $(seq 0 $((NUM_GPUS - 1))); do
 
     gpu_out="${OUTPUT_DIR}/.tmp_gpu${worker_idx}"
     mkdir -p "$gpu_out"
+    worker_log="${OUTPUT_DIR}/worker_${worker_idx}.log"
 
     echo "[Worker $worker_idx -> GPU $physical_gpu] prompts $((start_line - 1))-$((end_line - 1))  ($num_lines prompts)"
 
-    CUDA_VISIBLE_DEVICES=$physical_gpu python inference.py \
+    CUDA_VISIBLE_DEVICES=$physical_gpu "${PYTHON_CMD[@]}" inference.py \
         --config_path "$CONFIG_PATH" \
         --output_folder "$gpu_out" \
         --checkpoint_path "$CHECKPOINT_PATH" \
@@ -164,17 +169,28 @@ for worker_idx in $(seq 0 $((NUM_GPUS - 1))); do
         --use_ema \
         --save_with_index \
         --seed "$SEED" \
-        "${PROFILE_ARGS[@]}" &
+        "${PROFILE_ARGS[@]}" > "$worker_log" 2>&1 &
     PIDS+=($!)
+    WORKER_INDICES+=("$worker_idx")
 done
 
 echo ""
 echo "Waiting for all GPUs to finish..."
-wait
+failed_workers=0
+for pid_index in "${!PIDS[@]}"; do
+    pid="${PIDS[$pid_index]}"
+    worker_idx="${WORKER_INDICES[$pid_index]}"
+    if ! wait "$pid"; then
+        echo "ERROR: worker ${worker_idx} failed. See ${OUTPUT_DIR}/worker_${worker_idx}.log"
+        failed_workers=$((failed_workers + 1))
+    fi
+done
 echo "All GPUs finished!"
 
 # ---------- Rename to video_XXX.mp4 ----------
 echo "Renaming output files..."
+missing_outputs=0
+renamed_outputs=0
 for worker_idx in $(seq 0 $((NUM_GPUS - 1))); do
     offset=$((worker_idx * PROMPTS_PER_GPU))
     gpu_out="${OUTPUT_DIR}/.tmp_gpu${worker_idx}"
@@ -182,13 +198,32 @@ for worker_idx in $(seq 0 $((NUM_GPUS - 1))); do
 
     for local_idx in $(seq 0 $((PROMPTS_PER_GPU - 1))); do
         src="${gpu_out}/${local_idx}-0_ema.mp4"
-        [ ! -f "$src" ] && continue
         global_idx=$((offset + local_idx))
-        dst="video_$(printf '%03d' "$global_idx").mp4"
-        mv "$src" "${OUTPUT_DIR}/${dst}"
+        [ "$global_idx" -ge "$TOTAL_PROMPTS" ] && continue
+        if [ ! -f "$src" ]; then
+            echo "ERROR: missing output for prompt index ${global_idx}: ${src}"
+            echo "       See ${OUTPUT_DIR}/worker_${worker_idx}.log"
+            missing_outputs=$((missing_outputs + 1))
+            continue
+        fi
+        dst="${OUTPUT_DIR}/video_$(printf '%03d' "$global_idx").mp4"
+        mv -f "$src" "$dst"
+        renamed_outputs=$((renamed_outputs + 1))
         echo "  ${dst}"
     done
 done
+
+if [ "$failed_workers" -ne 0 ] || [ "$missing_outputs" -ne 0 ]; then
+    echo "ERROR: ${failed_workers} workers failed; ${missing_outputs} expected videos were not generated."
+    echo "Temporary outputs and worker logs are preserved under ${OUTPUT_DIR}/"
+    exit 1
+fi
+
+if [ "$renamed_outputs" -ne "$TOTAL_PROMPTS" ]; then
+    echo "ERROR: expected ${TOTAL_PROMPTS} videos, renamed ${renamed_outputs}."
+    echo "Temporary outputs and worker logs are preserved under ${OUTPUT_DIR}/"
+    exit 1
+fi
 
 # ---------- Cleanup temp files ----------
 rm -rf "${OUTPUT_DIR}/.tmp_gpu"* "${OUTPUT_DIR}/.prompts_gpu"*
@@ -196,4 +231,4 @@ rm -rf "${OUTPUT_DIR}/.tmp_gpu"* "${OUTPUT_DIR}/.prompts_gpu"*
 echo ""
 echo "=== Done ==="
 echo "Output: ${OUTPUT_DIR}/"
-echo "Videos: $(ls "${OUTPUT_DIR}"/video_*.mp4 2>/dev/null | wc -l) / ${TOTAL_PROMPTS}"
+echo "Videos: ${renamed_outputs} / ${TOTAL_PROMPTS}"
