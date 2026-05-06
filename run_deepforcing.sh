@@ -72,7 +72,15 @@ cleanup() {
 }
 trap cleanup SIGINT SIGTERM
 
-TOTAL_PROMPTS=$(wc -l < "$PROMPT_FILE")
+TOTAL_PROMPTS=$(python3 -c "
+import sys
+with open(sys.argv[1], 'r', encoding='utf-8') as f:
+    print(sum(1 for line in f if line.strip()))
+" "$PROMPT_FILE")
+if [ "$TOTAL_PROMPTS" -eq 0 ]; then
+    echo "Error: no non-empty prompts found in ${PROMPT_FILE}"
+    exit 1
+fi
 PROMPTS_PER_GPU=$(( (TOTAL_PROMPTS + NUM_GPUS - 1) / NUM_GPUS ))
 
 GPU_ASSIGNMENT_SOURCE="default"
@@ -149,9 +157,22 @@ for worker_idx in $(seq 0 $((NUM_GPUS - 1))); do
 
     # Extract this worker's subset of prompts.
     tmp_file="${OUTPUT_DIR}/.prompts_gpu${worker_idx}.txt"
-    sed -n "${start_line},${end_line}p" "$PROMPT_FILE" > "$tmp_file"
+    python3 -c "
+import sys
+prompt_file, output_file = sys.argv[1], sys.argv[2]
+start, end = int(sys.argv[3]), int(sys.argv[4])
+with open(prompt_file, 'r', encoding='utf-8') as f:
+    prompts = [line.strip() for line in f if line.strip()]
+with open(output_file, 'w', encoding='utf-8') as f:
+    for prompt in prompts[start - 1:end]:
+        f.write(prompt + '\n')
+" "$PROMPT_FILE" "$tmp_file" "$start_line" "$end_line"
 
-    num_lines=$(wc -l < "$tmp_file")
+    num_lines=$(python3 -c "
+import sys
+with open(sys.argv[1], 'r', encoding='utf-8') as f:
+    print(sum(1 for line in f if line.strip()))
+" "$tmp_file")
     [ "$num_lines" -eq 0 ] && continue
 
     gpu_out="${OUTPUT_DIR}/.tmp_gpu${worker_idx}"
@@ -169,7 +190,7 @@ for worker_idx in $(seq 0 $((NUM_GPUS - 1))); do
         --use_ema \
         --save_with_index \
         --seed "$SEED" \
-        "${PROFILE_ARGS[@]}" > "$worker_log" 2>&1 &
+        "${PROFILE_ARGS[@]}" > >(tee "$worker_log") 2>&1 &
     PIDS+=($!)
     WORKER_INDICES+=("$worker_idx")
 done
