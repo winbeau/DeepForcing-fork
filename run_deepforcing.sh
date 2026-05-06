@@ -10,6 +10,7 @@ CHECKPOINT_PATH="checkpoints/self_forcing_dmd.pt"
 NUM_FRAMES=120
 NUM_GPUS=4
 SEED=1356145
+PROFILE=0
 # ==================================
 
 usage() {
@@ -27,6 +28,7 @@ Options:
   --checkpoint_path PATH  Checkpoint file (default: $CHECKPOINT_PATH)
   --prompt_file PATH      Prompt file (default: $PROMPT_FILE)
   --seed N                Random seed (default: $SEED)
+  --profile               Print DiT generation and VAE decoding timing
 
 GPU assignment:
   - If CUDA_VISIBLE_DEVICES is unset, this script uses GPUs 0..N-1.
@@ -48,6 +50,7 @@ while [[ $# -gt 0 ]]; do
         --checkpoint_path)   CHECKPOINT_PATH="$2"; shift 2 ;;
         --prompt_file)       PROMPT_FILE="$2"; shift 2 ;;
         --seed)              SEED="$2"; shift 2 ;;
+        --profile)           PROFILE=1; shift ;;
         -h|--help)           usage 0 ;;
         *) echo "Unknown option: $1"; usage ;;
     esac
@@ -100,6 +103,7 @@ echo "GPUs: $NUM_GPUS"
 echo "GPU assignment source: $GPU_ASSIGNMENT_SOURCE"
 echo "Physical GPUs: ${GPU_IDS[*]}"
 echo "Output frames: $NUM_FRAMES"
+echo "Profile: $PROFILE"
 echo "Config: $CONFIG_PATH"
 echo "Output: $OUTPUT_DIR"
 if [[ -n "${MASTER_PORT:-}" ]]; then
@@ -112,6 +116,11 @@ echo "Prompts per GPU: $PROMPTS_PER_GPU"
 echo ""
 
 mkdir -p "$OUTPUT_DIR"
+
+PROFILE_ARGS=()
+if [[ "$PROFILE" -eq 1 ]]; then
+    PROFILE_ARGS+=(--profile)
+fi
 
 # ---------- Generate prompts.csv ----------
 python3 -c "
@@ -154,7 +163,8 @@ for worker_idx in $(seq 0 $((NUM_GPUS - 1))); do
         --num_output_frames "$NUM_FRAMES" \
         --use_ema \
         --save_with_index \
-        --seed "$SEED" &
+        --seed "$SEED" \
+        "${PROFILE_ARGS[@]}" &
     PIDS+=($!)
 done
 

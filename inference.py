@@ -37,6 +37,8 @@ parser.add_argument("--is_ds_only", dest="is_ds_only", default=0, type=int,
                     help="Whether to use DS only mode")
 parser.add_argument("--Budget", type=int, default=16, help="Budget for PC")
 parser.add_argument("--Recent", type=int, default=4, help="Recent for PC")
+parser.add_argument("--profile", action="store_true",
+                    help="Print DiT generation and VAE decoding timing for supported pipelines")
 args = parser.parse_args()
 
 # Initialize distributed inference
@@ -182,14 +184,19 @@ for i, batch_data in tqdm(enumerate(dataloader), disable=(local_rank != 0)):
             [args.num_samples, args.num_output_frames, 16, 60, 104], device=device, dtype=torch.bfloat16
         )
 
-    # Generate 81 frames
-    video, latents = pipeline.inference(
-        noise=sampled_noise,
-        text_prompts=prompts,
-        return_latents=True,
-        initial_latent=initial_latent,
-        low_memory=low_memory,
-    )
+    inference_kwargs = {
+        "noise": sampled_noise,
+        "text_prompts": prompts,
+        "return_latents": True,
+        "initial_latent": initial_latent,
+    }
+    if isinstance(pipeline, CausalInferencePipeline):
+        inference_kwargs["low_memory"] = low_memory
+        inference_kwargs["profile"] = args.profile
+    elif args.profile and local_rank == 0:
+        print("Warning: --profile is currently only supported by CausalInferencePipeline.")
+
+    video, latents = pipeline.inference(**inference_kwargs)
     current_video = rearrange(video, 'b t c h w -> b t h w c').cpu()
     all_video.append(current_video)
     num_generated_frames += latents.shape[1]
